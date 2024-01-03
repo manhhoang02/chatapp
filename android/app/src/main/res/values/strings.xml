@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">chatApp</string>
+    <string name="facebook_app_id">891904632232882</string>
+    <string name="fb_login_protocol_scheme">fb891904632232882</string>
+    <string name="facebook_client_token">872de7fc8065a6647cfb14552120afed</string>
+
+</resources>

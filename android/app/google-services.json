@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "328214108378",
+    "project_id": "funchat-a0525",
+    "storage_bucket": "funchat-a0525.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:328214108378:android:2a234ccbf5bffa5dbf6de3",
+        "android_client_info": {
+          "package_name": "com.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "328214108378-vsf21pri5gfa85trpof2rpajvi19ngjt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.chatapp",
+            "certificate_hash": "28d7b8af663757d5377250af5c3c591f4b5dc3f2"
+          }
+        },
+        {
+          "client_id": "328214108378-d28hjog5jn8dats7t0djagcnmjbr7ioh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD85KcgUr8boxOoR3um5gaceO3TUTfXuu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "328214108378-d28hjog5jn8dats7t0djagcnmjbr7ioh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "328214108378-2oumqhpf37ia2qf4cll30klaj9toubpi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.chatapp.abong"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
