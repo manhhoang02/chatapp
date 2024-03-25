@@ -42,6 +42,7 @@ export default function () {
         },
         {
           onSuccess: data => {
+            setProcessing(false);
             if (data && !data.success) {
               showToastMessageError('Thất bại', 'Email đã được đăng ký');
               return;
@@ -53,6 +54,7 @@ export default function () {
             );
           },
           onError: () => {
+            setProcessing(false);
             showToastMessageError('Thất bại', 'Đăng ký tài khoản thất bại');
           },
           onSettled: () => {

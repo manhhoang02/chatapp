@@ -11,7 +11,6 @@ import React, {
 import {Socket} from 'socket.io-client';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import ReactotronConfig from 'abong.code/config/ReactotronConfig';
 import Toast, {
   BaseToast,
   ErrorToast,
@@ -59,7 +58,6 @@ const AppProvider = ({children}: any) => {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{flex: 1}}>
-        <ReactotronConfig />
         <QueryClientProvider client={queryClient}>
           <AppContext.Provider
             value={{

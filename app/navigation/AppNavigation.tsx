@@ -12,13 +12,25 @@ import {NavigationContainer} from '@react-navigation/native';
 import {initApiHeader} from '@abong.code/api/AppNetworking';
 import ModalCallVideo from 'app/components/modals/ModalCallVideo';
 import {consoleLog} from '@abong.code/helpers/logHelper';
+import SplashNavigator from './container/SplashNavigator';
 
 export default function () {
   const {socket, user, setUser, showModalCallVideo, setShowModalCallVideo} =
     useAppContext();
   const [isLoading, setIsLoading] = useState(true);
+  const [isFirst, setIsFirst] = useState(false);
   const [dataCall, setDataCall] = useState<any>();
+
   const init = async () => {
+    const hasFirst = await AsyncStorage.getItem('hasFirst');
+    if (hasFirst && hasFirst === '1') {
+      setIsFirst(false);
+    } else {
+      setIsFirst(true);
+      setIsLoading(false);
+      return;
+    }
+
     const token = await AsyncStorage.getItem(AppConstant.SESSION.TOKEN);
     if (token) {
       initApiHeader(token);
@@ -61,9 +73,19 @@ export default function () {
     );
   }
   consoleLog(dataCall);
+
+  let navigator = null;
+  if (user._id) {
+    navigator = <MainNavigator />;
+  } else if (isFirst) {
+    navigator = <SplashNavigator />;
+  } else {
+    navigator = <AuthNavigator />;
+  }
+
   return (
     <NavigationContainer>
-      {user._id ? <MainNavigator /> : <AuthNavigator />}
+      {navigator}
       {dataCall ? (
         dataCall.friendId === user._id ? (
           <ModalCallVideo

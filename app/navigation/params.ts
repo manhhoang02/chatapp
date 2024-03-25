@@ -24,3 +24,7 @@ export type ParamsAuth = {
   ConfirmOTP: {email: string};
   ResetPassword: {email: string};
 };
+
+export type ParamsSplash = {
+  SplashScreen: undefined;
+};

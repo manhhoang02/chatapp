@@ -28,8 +28,8 @@ import {consoleLog} from '@abong.code/helpers/logHelper';
 
 export default function () {
   const {setUser} = useAppContext();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('manhkuma@gmail.com');
+  const [password, setPassword] = useState('123456');
   const [showPassword, setShowPassword] = useState(true);
   const [processing, setProcessing] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
