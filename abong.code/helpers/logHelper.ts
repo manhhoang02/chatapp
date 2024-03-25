@@ -1,5 +1,9 @@
 import Reactotron from 'reactotron-react-native';
 
-export const consoleLog = (...str1: any) => {
-  Reactotron.log(...str1);
+export const consoleLog = (str1: any, ...str2: any) => {
+  if (str2) {
+    Reactotron.log(str1, ...str2);
+  } else {
+    Reactotron.log(...str1);
+  }
 };

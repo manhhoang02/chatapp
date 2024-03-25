@@ -49,6 +49,7 @@ export default function () {
   const [reload, setReload] = useState(0);
   const [showModalCreatePost, setShowModalCreatePost] = useState(false);
   const [commentPostId, setCommentPostId] = useState('');
+  const [refresh, setRefresh] = useState(false);
 
   const {data, isSuccess, isError, isFetchedAfterMount} = useGetPosts(
     page,
@@ -144,12 +145,13 @@ export default function () {
     </TouchableOpacity>
   );
 
-  if (isFetchedAfterMount) {
-    refreshing.current = false;
-  }
+  // if (isFetchedAfterMount) {
+  //   refreshing.current = false;
+  // }
   const onRefresh = () => {
     refreshing.current = true;
-    setDataMount(false);
+    setRefresh(true);
+    // setDataMount(false);
     setPage(1);
   };
   const onEndReached = () => {
@@ -201,7 +203,8 @@ export default function () {
         {backgroundColor: color.white, paddingHorizontal: appSize(16)},
       ]}>
       <FlatList
-        refreshing={refreshing.current}
+        refreshing={refresh}
+        // refreshing={refreshing.current}
         onRefresh={onRefresh}
         data={posts}
         keyExtractor={(_, index) => index.toString()}
