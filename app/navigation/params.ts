@@ -18,13 +18,10 @@ export type ParamsStack = {
   FriendRequests: undefined;
 };
 export type ParamsAuth = {
+  SplashScreen: undefined;
   Login: undefined;
   ConfirmEmail: undefined;
   Register: undefined;
   ConfirmOTP: {email: string};
   ResetPassword: {email: string};
-};
-
-export type ParamsSplash = {
-  SplashScreen: undefined;
 };

@@ -1,4 +1,3 @@
-import {appSize} from '@abong.code/config/AppConstant';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
 import {
   showToastMessageError,
@@ -6,8 +5,12 @@ import {
 } from '@abong.code/helpers/messageHelper';
 import color from '@abong.code/theme/color';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {AppText} from '@starlingtech/element';
 import {useResetPassword} from 'app/api/auth';
+import AppContainer from 'app/components/Global/AppContainer';
 import {ParamsAuth} from 'app/navigation/params';
+import IconEye from 'assets/icons/IconEye';
+import AppStyles from 'elements/AppStyles';
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -16,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -23,7 +27,7 @@ export default function ({
   route,
   navigation,
 }: NativeStackScreenProps<ParamsAuth, 'ResetPassword'>) {
-  const {top} = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -71,120 +75,87 @@ export default function ({
     }
   };
   return (
-    <View style={[styles.container, {paddingTop: top}]}>
-      <View style={styles.header}>
+    <AppContainer>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        style={[AppStyles.grow, {paddingTop: 21 + insets.top}, styles.scroll]}>
         <TouchableOpacity
-          style={styles.btnBack}
+          style={styles.mb20}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} />
+          <Ionicons name="arrow-back-outline" size={24} color={color.white} />
         </TouchableOpacity>
-        <Text style={styles.titleHeader}>Cài lại mật khẩu</Text>
-      </View>
-      <Text style={[styles.text, {marginTop: appSize(30)}]}>Mật khẩu mới</Text>
-      <View style={styles.containerTextInput}>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Nhập mật khẩu mới"
-          autoCapitalize="none"
-          style={styles.textInput}
-          placeholderTextColor={color.placeholder}
-          secureTextEntry={showPassword}
+
+        <Text style={styles.resetText}>Reset Password</Text>
+
+        <AppText style={styles.text}>Enter new password</AppText>
+        <View style={styles.mb20}>
+          <TextInput
+            placeholder="New password"
+            placeholderTextColor="#FFFFFF80"
+            style={styles.textInput}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={showPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.iconEyeBtn}>
+            <IconEye hide={showPassword} />
+          </TouchableOpacity>
+        </View>
+
+        <AppText style={styles.text}>Confirm new password</AppText>
+        <View style={styles.mb20}>
+          <TextInput
+            placeholder="Confirm new password"
+            placeholderTextColor="#FFFFFF80"
+            style={styles.textInput}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={showConfirmPW}
+          />
+          <TouchableOpacity
+            onPress={() => setShowConfirmPW(!showConfirmPW)}
+            style={styles.iconEyeBtn}>
+            <IconEye hide={showConfirmPW} />
+          </TouchableOpacity>
+        </View>
+
+        <AppProcessingButton
+          disabled={!password || !confirmPassword}
+          processing={processing}
+          height={51}
+          text="Submit"
+          width={326}
+          backgroundColor="#635A8F"
+          onPress={handleChange}
         />
-        {showPassword ? (
-          <Ionicons
-            name="eye"
-            size={22}
-            onPress={() => {
-              setShowPassword(!showPassword);
-            }}
-          />
-        ) : (
-          <Ionicons
-            name="eye-off"
-            size={22}
-            onPress={() => {
-              setShowPassword(!showPassword);
-            }}
-          />
-        )}
-      </View>
-      <Text style={[styles.text, {marginTop: appSize(30)}]}>
-        Xác nhận mật khẩu mới
-      </Text>
-      <View style={styles.containerTextInput}>
-        <TextInput
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder="Xác nhận mật khẩu mới"
-          autoCapitalize="none"
-          style={styles.textInput}
-          placeholderTextColor={color.placeholder}
-          secureTextEntry={showConfirmPW}
-        />
-        {showConfirmPW ? (
-          <Ionicons
-            name="eye"
-            size={22}
-            onPress={() => {
-              setShowConfirmPW(!showConfirmPW);
-            }}
-          />
-        ) : (
-          <Ionicons
-            name="eye-off"
-            size={22}
-            onPress={() => {
-              setShowConfirmPW(!showConfirmPW);
-            }}
-          />
-        )}
-      </View>
-      <AppProcessingButton
-        disabled={!password || !confirmPassword}
-        processing={processing}
-        height={appSize(45)}
-        width={appSize(200)}
-        text="Xác nhận"
-        onPress={handleChange}
-      />
-    </View>
+      </KeyboardAwareScrollView>
+    </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: appSize(16),
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: appSize(50),
-  },
-  titleHeader: {
-    fontSize: appSize(20),
-    fontWeight: 'bold',
-    color: color.black,
-  },
-  btnBack: {
-    position: 'absolute',
-    left: 0,
-  },
-  text: {
-    fontSize: appSize(16),
-    fontWeight: '600',
-    marginLeft: appSize(5),
-  },
-  containerTextInput: {
-    borderBottomWidth: appSize(0.3),
-    borderColor: color.black,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  text: {fontSize: 17, color: 'white', fontWeight: '500', marginBottom: 8},
+  iconEyeBtn: {position: 'absolute', right: 20, top: 14.5, bottom: 14.5},
+  mb20: {marginBottom: 20},
   textInput: {
-    padding: appSize(10),
+    height: 53,
     flex: 1,
+    borderWidth: 3,
+    borderColor: 'white',
+    borderRadius: 25,
+    paddingLeft: 20,
+    fontSize: 17,
+    fontWeight: '500',
+    color: 'white',
+    justifyContent: 'center',
   },
+  resetText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 36,
+  },
+  scroll: {paddingHorizontal: 32},
 });

@@ -1,4 +1,3 @@
-import {appSize} from '@abong.code/config/AppConstant';
 import {
   showToastMessageError,
   showToastMessageInfo,
@@ -7,7 +6,9 @@ import color from '@abong.code/theme/color';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useSendOTP} from 'app/api/auth';
+import AppContainer from 'app/components/Global/AppContainer';
 import {ParamsAuth} from 'app/navigation/params';
+import AppStyles from 'elements/AppStyles';
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -16,13 +17,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function () {
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
-  const {top} = useSafeAreaInsets();
-  const [email, setEmail] = useState('');
+  const insets = useSafeAreaInsets();
+
+  const [email, setEmail] = useState('manhkuma@gmail.com');
   const {mutate} = useSendOTP();
   const validateEmail = (inputEmail: string) => {
     return inputEmail.match(
@@ -46,76 +50,80 @@ export default function () {
       showToastMessageError('Error', 'Chưa đúng định dạng email.');
     }
   };
+
   return (
-    <View style={[styles.container, {paddingTop: top}]}>
-      <View style={[styles.header, {marginTop: top}]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} />
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.title}>
-        Vui lòng nhập Email tài khoản của bạn để được cấp lại mật khẩu.
-      </Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Nhập email"
-        autoCapitalize="none"
-        style={{
-          borderWidth: appSize(1),
-          padding: appSize(10),
-          borderRadius: appSize(5),
-          borderColor: color.primary,
-          marginTop: appSize(40),
-        }}
-        placeholderTextColor={color.placeholder}
-      />
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'center',
-          marginTop: appSize(20),
-        }}>
+    <AppContainer>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        style={[AppStyles.grow, {paddingTop: 20 + insets.top}, styles.scroll]}>
         <TouchableOpacity
-          style={[
-            styles.btn,
-            {backgroundColor: email ? color.primary : color.disabled},
-          ]}
-          onPress={handleConfirm}>
-          <Text style={styles.textBtn}>Xác nhận</Text>
+          style={styles.mb20}
+          onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-outline" size={24} color={color.white} />
         </TouchableOpacity>
-      </View>
-    </View>
+
+        <Text style={[styles.title, styles.mb20]}>Forgot password?</Text>
+
+        <Text style={styles.desc}>
+          Enter your email and we’ll send you the{'\n'}instructions on how to
+          reset your password.
+        </Text>
+
+        <View>
+          <TextInput
+            placeholder="Enter your email address"
+            placeholderTextColor="#EBE2F8"
+            style={styles.textInput}
+            value={email}
+            onChangeText={setEmail}
+            inputMode="email"
+          />
+          <LinearGradient
+            colors={['#4935A5', '#CA99EB', '#CFCCD7']}
+            start={{x: 0.0, y: 0.5}}
+            end={{x: 0.6, y: 0.5}}
+            locations={[0, 0.8, 1]}
+            style={styles.line}
+          />
+        </View>
+
+        <TouchableOpacity
+          onPress={handleConfirm}
+          disabled={!email}
+          style={[styles.btn, !email && styles.disabled]}>
+          <Text style={styles.btnText}>Recover Password</Text>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
+    </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: color.white,
-    justifyContent: 'center',
-    paddingHorizontal: appSize(16),
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: appSize(15),
-  },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: appSize(16),
-  },
+  disabled: {opacity: 0.7},
+  btnText: {fontSize: 22, color: 'white', fontWeight: 'bold'},
   btn: {
+    height: 51,
     alignItems: 'center',
     justifyContent: 'center',
-    width: appSize(150),
-    paddingVertical: appSize(10),
-    borderRadius: appSize(5),
+    borderRadius: 25,
+    marginTop: 65,
+    backgroundColor: '#635A8F',
   },
-  textBtn: {
+  textInput: {
+    fontSize: 15,
+    height: 44,
     color: color.white,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
+  line: {height: 3, width: '100%'},
+  desc: {
+    fontSize: 15,
+    color: color.white,
+    fontWeight: '500',
+    lineHeight: 26.5,
+    marginBottom: 32,
+  },
+  title: {fontSize: 30, color: color.white, fontWeight: 'bold'},
+  scroll: {paddingHorizontal: 32},
+  mb20: {marginBottom: 20},
 });

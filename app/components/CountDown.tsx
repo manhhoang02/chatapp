@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {StyleSheet, Text} from 'react-native';
-import {appSize} from '@abong.code/config/AppConstant';
+import {AppText} from '@starlingtech/element';
 
 const Countdown = ({
   visible,
@@ -9,7 +8,7 @@ const Countdown = ({
   visible: boolean;
   setVisible: Function;
 }) => {
-  let countdown = useRef({} as number);
+  let countdown = useRef<any>();
 
   const [timeOtp, setTimeOtp] = useState(15);
   useEffect(() => {
@@ -25,14 +24,11 @@ const Countdown = ({
     return () => clearInterval(countdown.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeOtp]);
-  return <Text style={styles.text}> ({timeOtp}s)</Text>;
+  return (
+    <AppText size={16} color="primary" ml={4}>
+      ({timeOtp}s)
+    </AppText>
+  );
 };
-const styles = StyleSheet.create({
-  text: {
-    fontSize: appSize(12),
-    fontWeight: '400',
-    color: '#9e9e9e',
-  },
-});
 
 export default Countdown;

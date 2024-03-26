@@ -6,7 +6,8 @@
     "paths": {
       "app/*": ["app/*"],
       "assets/*": ["assets/*"],
-      "@abong.code/*":["abong.code/*"]
+      "@abong.code/*":["abong.code/*"],
+      "@starling/theme": ["vn.starlingTech/theme/theming"]
     }
   },
 }

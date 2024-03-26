@@ -1,3 +1,8 @@
+import AppConstant, {appSize} from '@abong.code/config/AppConstant';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {BlurView} from '@react-native-community/blur';
+import {useGlobalStore} from 'app/store/globalStore';
+import React from 'react';
 import {
   ImageBackground,
   StyleSheet,
@@ -5,23 +10,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
-import {BlurView} from '@react-native-community/blur';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {ParamsAuth, ParamsSplash} from 'app/navigation/params';
-import {CompositeScreenProps} from '@react-navigation/native';
 
-type CombinedProps = CompositeScreenProps<
-  NativeStackScreenProps<ParamsAuth>,
-  NativeStackScreenProps<ParamsSplash, 'SplashScreen'>
->;
-
-export default function SplashScreen({navigation}: CombinedProps) {
+export default function SplashScreen() {
+  const dispatchIsFirstTime = useGlobalStore(s => s.dispatchIsFirstTime);
   const onPress = () => {
-    navigation.navigate('Login');
-    AsyncStorage.setItem('hasFirst', '1');
+    dispatchIsFirstTime(false);
+    AsyncStorage.setItem('isFirstTime', 'false');
   };
   return (
     <ImageBackground

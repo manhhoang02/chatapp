@@ -1,18 +1,15 @@
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
 import {useAppContext} from '@abong.code/context/AppProvider';
 import color from '@abong.code/theme/color';
 import {getProfileMe, useLogin, useLoginSocial} from 'app/api/auth';
 import React, {useEffect, useState} from 'react';
 import {
   Image,
-  Keyboard,
-  Pressable,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {TextInput} from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
 import {initApiHeader} from '@abong.code/api/AppNetworking';
@@ -25,13 +22,26 @@ import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {consoleLog} from '@abong.code/helpers/logHelper';
+import AppContainer from 'app/components/Global/AppContainer';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import AppStyles from 'elements/AppStyles';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+
+import AppConstant, {appSize} from '@abong.code/config/AppConstant';
+import IconEye from 'assets/icons/IconEye';
+import IconCheckBox from 'assets/icons/IconCheckBox';
+import IconGoogle from 'assets/icons/IconGoogle';
 
 export default function () {
+  const insets = useSafeAreaInsets();
+
   const {setUser} = useAppContext();
-  const [email, setEmail] = useState('manhkuma@gmail.com');
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
   const {mutate} = useLogin();
   const {mutate: loginSocial} = useLoginSocial();
@@ -145,6 +155,31 @@ export default function () {
       );
     }
   };
+
+  const handleRememberMe = async () => {
+    setRememberMe(!rememberMe);
+    if (!rememberMe) {
+      await AsyncStorage.setItem('email', email);
+      await AsyncStorage.setItem('password', password);
+    } else {
+      await AsyncStorage.removeItem('email');
+      await AsyncStorage.removeItem('password');
+    }
+  };
+
+  useEffect(() => {
+    const getInfo = async () => {
+      const reEmail = await AsyncStorage.getItem('email');
+      const rePassword = await AsyncStorage.getItem('password');
+      if (reEmail !== null && rePassword !== null) {
+        setEmail(reEmail);
+        setPassword(rePassword);
+        setRememberMe(true);
+      }
+    };
+    getInfo();
+  }, []);
+
   const handleClickForgotPassword = () => {
     navigation.navigate('ConfirmEmail');
   };
@@ -156,164 +191,171 @@ export default function () {
     });
   }, []);
   return (
-    <Pressable style={styles.container} onPress={() => Keyboard.dismiss()}>
-      <View style={styles.boxForm}>
+    <AppContainer>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        style={[AppStyles.grow, {paddingTop: 30 + insets.top}, styles.scroll]}>
         <Image
-          source={require('assets/image/logo_app.png')}
+          source={require('assets/funchat.png')}
           style={styles.logo}
-          resizeMode="stretch"
+          resizeMode="contain"
         />
+        <Text style={styles.signInText}>Sign in</Text>
         <TextInput
-          label={'Email'}
           value={email}
           onChangeText={setEmail}
-          mode="outlined"
-          outlineColor={color.border}
-          activeOutlineColor={color.primary}
-          textColor={color.primary}
-          style={styles.textInput}
+          placeholder="Email address"
+          placeholderTextColor="#FFFFFF80"
+          style={[styles.textInput, styles.mb19]}
+          inputMode="email"
+          keyboardType="email-address"
           autoCapitalize="none"
         />
-        <TextInput
-          autoCapitalize="none"
-          style={styles.textInput}
-          label={'Mật khẩu'}
-          value={password}
-          onChangeText={setPassword}
-          mode="outlined"
-          outlineColor={color.border}
-          activeOutlineColor={color.primary}
-          textColor={color.primary}
-          secureTextEntry={showPassword}
-          right={
-            password ? (
-              <TextInput.Icon
-                icon={showPassword ? 'eye' : 'eye-off'}
-                size={20}
-                onPress={() => setShowPassword(!showPassword)}
-              />
-            ) : null
-          }
-        />
-        <View style={styles.btnForgot}>
+        <View style={styles.mb19}>
+          <TextInput
+            autoCapitalize="none"
+            placeholder="Password"
+            placeholderTextColor="#FFFFFF80"
+            style={styles.textInput}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={showPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(!showPassword)}
+            style={styles.iconEyeBtn}>
+            <IconEye hide={showPassword} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.actionsField, styles.mb19]}>
+          <View style={AppStyles.row}>
+            <TouchableOpacity onPress={handleRememberMe}>
+              <IconCheckBox color={'#F9F9F9'} isChecked={rememberMe} />
+            </TouchableOpacity>
+            <Text style={styles.rememberMeText}>Remember me</Text>
+          </View>
           <TouchableOpacity onPress={handleClickForgotPassword}>
-            <Text style={styles.textForgot}>Quên mật khẩu?</Text>
+            <Text style={styles.textForgot}>Forgot password</Text>
           </TouchableOpacity>
         </View>
 
         <AppProcessingButton
           disabled={!email || !password}
           processing={processing}
-          height={appSize(45)}
-          width={appSize(200)}
-          text="Đăng nhập"
+          height={51}
+          width={326}
+          text="Sign in"
           onPress={handleLogin}
+          style={styles.mb19}
+          backgroundColor="#635A8F"
         />
-        <View style={styles.lineOr}>
-          <View style={styles.line} />
-          <Text style={{marginHorizontal: appSize(10), color: color.black}}>
-            Hoặc
-          </Text>
-          <View style={styles.line} />
+        <Text style={[styles.signInWith, styles.mb19]}>Or sign in with</Text>
+
+        <View style={[styles.socialField, styles.mb19]}>
+          <TouchableOpacity
+            onPress={handleLoginFacebook}
+            style={[styles.socialBtn, {backgroundColor: color.btnFacebook}]}>
+            <MaterialCommunityIcons
+              name="facebook"
+              size={20}
+              color={color.white}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.socialBtn, {backgroundColor: color.btnTwitter}]}>
+            <MaterialCommunityIcons
+              name="twitter"
+              size={20}
+              color={color.white}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleLoginGoogle}
+            style={styles.socialBtn}>
+            <IconGoogle width={32} />
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.btn} onPress={handleLoginFacebook}>
-          <MaterialCommunityIcons
-            name="facebook"
-            size={appSize(24)}
-            color={color.btnFacebook}
-          />
-          <Text style={{marginLeft: appSize(8), color: color.black}}>
-            Đăng nhập bằng Facebook
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.btn} onPress={handleLoginGoogle}>
-          <Image
-            source={require('assets/image/logo_google.png')}
-            style={{width: appSize(22), height: appSize(22)}}
-          />
-          <Text style={{marginLeft: appSize(8), color: color.black}}>
-            Đăng nhập bằng Google
-          </Text>
-        </TouchableOpacity>
-
         <View style={styles.footer}>
-          <Text style={{color: color.black}}>Bạn chưa có tài khoản?</Text>
+          <Text style={styles.footerText}>Don’t have an account?</Text>
           <TouchableOpacity
             onPress={() => {
               navigation.navigate('Register');
             }}>
-            <Text
-              style={{
-                color: color.primary,
-                marginLeft: appSize(5),
-              }}>
-              Đăng ký
-            </Text>
+            <Text style={styles.signUpText}>Sign up</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </Pressable>
+      </KeyboardAwareScrollView>
+    </AppContainer>
   );
 }
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: color.white,
+  signUpText: {
+    color: '#3B21B2',
+    fontSize: 17,
+    fontWeight: '500',
+  },
+  footerText: {color: color.white, fontSize: 17, fontWeight: '500'},
+  signInWith: {
+    fontSize: 17,
+    color: color.white,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  rememberMeText: {
+    fontSize: 17,
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  iconEyeBtn: {position: 'absolute', right: 20, top: 14.5, bottom: 14.5},
+  scroll: {paddingHorizontal: 32},
+  signInText: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: 'white',
+    marginVertical: 36,
+  },
+  socialField: {flexDirection: 'row', justifyContent: 'center'},
+  socialBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 5,
+    alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 10,
   },
-  boxForm: {
-    marginHorizontal: appSize(16),
-  },
+  mb19: {marginBottom: 19},
   logo: {
     height: appSize(120),
     width: appSize(250),
     alignSelf: 'center',
-    marginBottom: appSize(30),
+    tintColor: 'white',
   },
   textInput: {
+    height: 53,
+    borderWidth: 3,
+    borderColor: 'white',
+    borderRadius: 25,
+    paddingLeft: 20,
+    fontSize: 17,
+    fontWeight: '500',
+    color: 'white',
     justifyContent: 'center',
-    marginBottom: appSize(10),
   },
-  btnForgot: {
+  actionsField: {
     flexDirection: 'row',
-    marginLeft: appSize(5),
+    justifyContent: 'space-between',
   },
   textForgot: {
     color: color.primary,
+    fontSize: 17,
+    fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: appSize(50),
-  },
-  btn: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    width: '85%',
-    alignSelf: 'center',
-    paddingVertical: appSize(10),
-    borderRadius: appSize(5),
-    shadowColor: color.primary,
-    shadowOffset: {
-      width: 0,
-      height: 1.5,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    backgroundColor: color.white,
-    marginBottom: appSize(15),
-  },
-  line: {
-    backgroundColor: color.black,
-    height: appSize(0.4),
-    flex: 1,
-  },
-  lineOr: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: appSize(20),
+    justifyContent: 'space-between',
   },
 });

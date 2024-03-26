@@ -1,6 +1,6 @@
-import {StyleSheet} from 'react-native'
+import {StyleSheet} from 'react-native';
 
-export const borderWidth = StyleSheet.hairlineWidth
+export const borderWidth = StyleSheet.hairlineWidth;
 
 export default StyleSheet.create({
   bgTransparent: {backgroundColor: 'transparent'},
@@ -14,6 +14,7 @@ export default StyleSheet.create({
     borderBottomWidth: borderWidth,
   },
   buttonTryAgain: {height: 54, marginTop: 15, width: 120},
+  grow: {flexGrow: 1},
   card: {
     borderTopColor: 'rgba(6,6,6,0)',
     borderTopWidth: borderWidth,
@@ -163,4 +164,4 @@ export default StyleSheet.create({
   },
 
   transparent: {backgroundColor: 'transparent'},
-})
+});
