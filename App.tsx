@@ -1,10 +1,15 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import AppNavigation from 'app/navigation/AppNavigation';
 import AppProvider from '@abong.code/context/AppProvider';
 import 'react-native-gesture-handler';
-import {StatusBar} from 'react-native';
+import {ActivityIndicator, StatusBar, Text, View} from 'react-native';
 import moment from 'moment';
 import './abong.code/config/ReactotronConfig.ts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import SplashScreen from 'app/screen/Splash/SplashScreen';
+import AppStyles from 'elements/AppStyles';
+import color from '@abong.code/theme/color';
+import {useGlobalStore} from 'app/store/globalStore';
 
 moment.locale('vi');
 moment.updateLocale('vi', {
@@ -12,14 +17,50 @@ moment.updateLocale('vi', {
 });
 
 const App = () => {
+  const [isFirstTime, dispatchIsFirstTime] = useGlobalStore(s => [
+    s.isFirstTime,
+    s.dispatchIsFirstTime,
+  ]);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkFirstTime = async () => {
+      try {
+        const check = await AsyncStorage.getItem('isFirstTime');
+        if (check === null) {
+          await AsyncStorage.setItem('isFirstTime', 'true');
+          dispatchIsFirstTime(true);
+        } else {
+          dispatchIsFirstTime(false);
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.log('Error checking first time:', error);
+        setIsLoading(false);
+      }
+    };
+
+    checkFirstTime();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={[AppStyles.center, AppStyles.fill]}>
+        <ActivityIndicator color={color.primary} />
+      </View>
+    );
+  }
+
   return (
     <AppProvider>
       <StatusBar
-        barStyle={'dark-content'}
+        barStyle={'light-content'}
         translucent
         backgroundColor={'transparent'}
       />
-      <AppNavigation />
+      {isFirstTime ? <SplashScreen /> : <AppNavigation />}
     </AppProvider>
   );
 };

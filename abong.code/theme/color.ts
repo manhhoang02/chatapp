@@ -15,5 +15,6 @@ export default {
   placeholder: '#b1b1b1',
   borderInput: '#d8d8d8',
   btnFacebook: '#1B74E4',
+  btnTwitter: '#1DA1F2',
   textBtnLike: '#65676B',
 };

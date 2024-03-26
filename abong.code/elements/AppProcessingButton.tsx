@@ -5,8 +5,9 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
-  View,
   TextStyle,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
 import {ActivityIndicator} from 'react-native-paper';
 import Animated, {
@@ -22,6 +23,7 @@ type Props = {
   height: number;
   text: string;
   textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
   processing?: boolean;
   onPress: () => void;
 };
@@ -56,15 +58,20 @@ export default function (props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.processing]);
   return (
-    <View style={styles.containerBtn}>
+    <TouchableOpacity
+      disabled={props.disabled}
+      onPress={onPress}
+      style={[
+        styles.containerBtn,
+        props.style,
+        props.disabled && styles.disabled,
+      ]}>
       <Animated.View
         style={[
           styles.btnLogin,
           {
             height: props.height,
-            backgroundColor: !props.disabled
-              ? props.backgroundColor || color.primary
-              : color.disabled,
+            backgroundColor: props.backgroundColor,
           },
           animBtn,
         ]}>
@@ -72,36 +79,31 @@ export default function (props: Props) {
           <ActivityIndicator color={color.white} />
         ) : (
           !isLoading && (
-            <TouchableOpacity disabled={props.disabled} onPress={onPress}>
-              <Text
-                style={[
-                  {color: color.white},
-                  styles.textLogin,
-                  props.textStyle,
-                ]}>
-                {props.text}
-              </Text>
-            </TouchableOpacity>
+            <Text
+              style={[{color: color.white}, styles.textLogin, props.textStyle]}>
+              {props.text}
+            </Text>
           )
         )}
       </Animated.View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  disabled: {opacity: 0.7},
   btnLogin: {
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: appSize(5),
-    marginTop: appSize(25),
+    flex: 1,
   },
   containerBtn: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   textLogin: {
-    fontSize: appSize(18),
-    fontWeight: '600',
+    fontSize: appSize(22),
+    fontWeight: '700',
   },
 });

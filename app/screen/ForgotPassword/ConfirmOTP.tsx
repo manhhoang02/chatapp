@@ -1,7 +1,7 @@
-import {appSize} from '@abong.code/config/AppConstant';
+import AppConstant from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
 import React, {useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -13,18 +13,26 @@ import {
   showToastMessageError,
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
+import AppContainer from 'app/components/Global/AppContainer';
+import AppStyles from 'elements/AppStyles';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import light from 'vn.starlingTech/theme/color/light';
+import {AppBlock, AppText, AppTouchableOpacity} from '@starlingtech/element';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
 
 export default function ({
   navigation,
   route,
 }: NativeStackScreenProps<ParamsAuth, 'ConfirmOTP'>) {
-  const {top} = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
+
   const [otp, setOtp] = useState('');
   const [visible, setVisible] = useState(false);
   const [processing, setProcessing] = useState(false);
+
   const {mutate} = useSendOTP();
   const {mutate: verifyOTP} = useVerifyOTP();
+
   const handleReSend = () => {
     setVisible(true);
     mutate(route?.params?.email, {
@@ -60,96 +68,98 @@ export default function ({
     );
   };
   return (
-    <View style={[styles.container, {paddingTop: top}]}>
-      <View style={[styles.header, {marginTop: top}]}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} />
+    <AppContainer>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        style={[AppStyles.grow, {paddingTop: 20 + insets.top}, styles.scroll]}>
+        <TouchableOpacity
+          style={styles.mb20}
+          onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-outline" size={24} color={color.white} />
         </TouchableOpacity>
-      </View>
-      <Text style={styles.title}>
-        Chúng tôi đã gửi 1 mã OTP về email "{route?.params?.email}" của bạn.
-      </Text>
 
-      <OTPInputView
-        style={{width: '80%', height: 150, alignSelf: 'center'}}
-        pinCount={6}
-        code={otp} //You can supply this prop or not. The component will be used as a controlled / uncontrolled component respectively.
-        onCodeChanged={code => {
-          setOtp(code);
-        }}
-        autoFocusOnLoad
-        codeInputFieldStyle={styles.codeInputFieldStyle}
-        codeInputHighlightStyle={styles.underlineStyleHighLighted}
-        // onCodeFilled={code => {
-        //   console.log(`Code is ${code}, you are good to go!`);
-        // }}
-      />
-      <View style={styles.row}>
-        <Text style={{fontSize: appSize(12)}}>Bạn chưa nhận được mã OTP. </Text>
-        <TouchableOpacity disabled={visible} onPress={handleReSend}>
-          <Text
-            style={[
-              styles.textReSend,
-              {color: visible ? '#9e9e9e' : '#F77F00'},
-            ]}>
-            Gửi lại
-          </Text>
-        </TouchableOpacity>
-        {visible && <CountDown visible={visible} setVisible={setVisible} />}
-      </View>
+        <Text style={[styles.title, styles.mb20]}>Enter code</Text>
 
-      <AppProcessingButton
-        disabled={otp.length < 6}
-        processing={processing}
-        height={appSize(40)}
-        width={appSize(200)}
-        text="Xác nhận OTP"
-        textStyle={styles.textBtn}
-        onPress={handleConfirm}
-      />
-    </View>
+        <Text style={styles.desc}>
+          Enter the 4-digit code we sent you at email{'\n'}
+          {route.params.email}
+        </Text>
+
+        <OTPInputView
+          style={styles.otpInputView}
+          pinCount={6}
+          code={otp}
+          onCodeChanged={setOtp}
+          autoFocusOnLoad
+          codeInputFieldStyle={styles.codeInputFieldStyle}
+          selectionColor="white"
+        />
+
+        <AppBlock mv={20} row alignItems="center">
+          <AppText size={16} color="white" weight="500">
+            You have not received the OTP code.
+          </AppText>
+
+          {visible ? (
+            <CountDown visible={visible} setVisible={setVisible} />
+          ) : (
+            <AppTouchableOpacity ml={4} onPress={handleReSend}>
+              <AppText size={16} color="primary" weight="500">
+                Resend
+              </AppText>
+            </AppTouchableOpacity>
+          )}
+        </AppBlock>
+
+        <AppProcessingButton
+          disabled={!otp || otp.length < 6}
+          processing={processing}
+          height={51}
+          text="NEXT"
+          width={AppConstant.UI_WIDTH - 64}
+          backgroundColor="#635A8F"
+          onPress={handleConfirm}
+        />
+      </KeyboardAwareScrollView>
+    </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: color.white,
-    justifyContent: 'center',
-    paddingHorizontal: appSize(16),
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: appSize(13),
+  otpInputView: {
+    width: 282,
+    height: 58,
+    alignSelf: 'center',
   },
   codeInputFieldStyle: {
-    width: 30,
-    height: 45,
-    borderWidth: 0,
-    borderBottomWidth: 1,
-    color: 'black',
+    width: 41,
+    height: 58,
+    borderWidth: 3,
+    borderRadius: 10,
+    color: light.white,
+    borderColor: '#8E63D6',
+    fontWeight: '500',
+    fontSize: 21,
   },
-  underlineStyleHighLighted: {
-    borderColor: '#03DAC6',
-  },
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: appSize(16),
-  },
-  textReSend: {
-    fontSize: appSize(12),
-    fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
+
+  disabled: {opacity: 0.7},
+  btnText: {fontSize: 22, color: 'white', fontWeight: 'bold'},
+  btn: {
+    height: 51,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 25,
+    marginTop: 65,
+    backgroundColor: '#635A8F',
   },
-  textBtn: {
-    fontSize: appSize(15),
+  desc: {
+    fontSize: 15,
     color: color.white,
+    fontWeight: '500',
+    lineHeight: 26.5,
+    marginBottom: 32,
   },
+  title: {fontSize: 30, color: color.white, fontWeight: 'bold'},
+  scroll: {paddingHorizontal: 32},
+  mb20: {marginBottom: 20},
 });
