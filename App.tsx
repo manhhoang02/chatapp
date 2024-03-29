@@ -1,15 +1,22 @@
+if (__DEV__) {
+  import('./abong.code/config/ReactotronConfig').then(() =>
+    console.log('Reactotron Configured'),
+  );
+}
+
 import React, {useEffect, useState} from 'react';
 import AppNavigation from 'app/navigation/AppNavigation';
 import AppProvider from '@abong.code/context/AppProvider';
 import 'react-native-gesture-handler';
-import {ActivityIndicator, StatusBar, Text, View} from 'react-native';
+import {ActivityIndicator, StatusBar, View} from 'react-native';
 import moment from 'moment';
-import './abong.code/config/ReactotronConfig.ts';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SplashScreen from 'app/screen/Splash/SplashScreen';
 import AppStyles from 'elements/AppStyles';
 import color from '@abong.code/theme/color';
 import {useGlobalStore} from 'app/store/globalStore';
+import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 
 moment.locale('vi');
 moment.updateLocale('vi', {
@@ -55,12 +62,14 @@ const App = () => {
 
   return (
     <AppProvider>
-      <StatusBar
-        barStyle={'light-content'}
-        translucent
-        backgroundColor={'transparent'}
-      />
-      {isFirstTime ? <SplashScreen /> : <AppNavigation />}
+      <BottomSheetModalProvider>
+        <StatusBar
+          barStyle={'dark-content'}
+          translucent
+          backgroundColor={'transparent'}
+        />
+        {isFirstTime ? <SplashScreen /> : <AppNavigation />}
+      </BottomSheetModalProvider>
     </AppProvider>
   );
 };

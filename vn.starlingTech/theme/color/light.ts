@@ -30,6 +30,11 @@ const light = {
 
   //custom
   button: '#635A8F',
+  white_70: '#FFFFFF70',
+  black_70: '#00000070',
+  red: '#FF204E',
+  gray: '#66676c',
+  light_gray: '#f1f2f6',
 };
 
 export default light;

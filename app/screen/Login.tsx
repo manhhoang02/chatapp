@@ -31,6 +31,7 @@ import AppConstant, {appSize} from '@abong.code/config/AppConstant';
 import IconEye from 'assets/icons/IconEye';
 import IconCheckBox from 'assets/icons/IconCheckBox';
 import IconGoogle from 'assets/icons/IconGoogle';
+import light from 'vn.starlingTech/theme/color/light';
 
 export default function () {
   const insets = useSafeAreaInsets();
@@ -200,12 +201,12 @@ export default function () {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.signInText}>Sign in</Text>
+        <Text style={styles.signInText}>Đăng nhập</Text>
         <TextInput
           value={email}
           onChangeText={setEmail}
-          placeholder="Email address"
-          placeholderTextColor="#FFFFFF80"
+          placeholder="Địa chỉ email"
+          placeholderTextColor={color.primary}
           style={[styles.textInput, styles.mb19]}
           inputMode="email"
           keyboardType="email-address"
@@ -214,8 +215,8 @@ export default function () {
         <View style={styles.mb19}>
           <TextInput
             autoCapitalize="none"
-            placeholder="Password"
-            placeholderTextColor="#FFFFFF80"
+            placeholder="Mật khẩu"
+            placeholderTextColor={color.primary}
             style={styles.textInput}
             value={password}
             onChangeText={setPassword}
@@ -224,19 +225,19 @@ export default function () {
           <TouchableOpacity
             onPress={() => setShowPassword(!showPassword)}
             style={styles.iconEyeBtn}>
-            <IconEye hide={showPassword} />
+            <IconEye hide={showPassword} color={color.primary} />
           </TouchableOpacity>
         </View>
 
         <View style={[styles.actionsField, styles.mb19]}>
           <View style={AppStyles.row}>
             <TouchableOpacity onPress={handleRememberMe}>
-              <IconCheckBox color={'#F9F9F9'} isChecked={rememberMe} />
+              <IconCheckBox color={color.primary} isChecked={rememberMe} />
             </TouchableOpacity>
-            <Text style={styles.rememberMeText}>Remember me</Text>
+            <Text style={styles.rememberMeText}>Ghi nhớ</Text>
           </View>
           <TouchableOpacity onPress={handleClickForgotPassword}>
-            <Text style={styles.textForgot}>Forgot password</Text>
+            <Text style={styles.textForgot}>Bạn quên mật khẩu?</Text>
           </TouchableOpacity>
         </View>
 
@@ -245,12 +246,12 @@ export default function () {
           processing={processing}
           height={51}
           width={326}
-          text="Sign in"
+          text="Đăng nhập"
           onPress={handleLogin}
           style={styles.mb19}
           backgroundColor="#635A8F"
         />
-        <Text style={[styles.signInWith, styles.mb19]}>Or sign in with</Text>
+        <Text style={[styles.signInWith, styles.mb19]}>Hoặc đăng nhập với</Text>
 
         <View style={[styles.socialField, styles.mb19]}>
           <TouchableOpacity
@@ -278,12 +279,12 @@ export default function () {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Don’t have an account?</Text>
+          <Text style={styles.footerText}>Bạn chưa có tài khoản?</Text>
           <TouchableOpacity
             onPress={() => {
               navigation.navigate('Register');
             }}>
-            <Text style={styles.signUpText}>Sign up</Text>
+            <Text style={styles.signUpText}>Đăng ký</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
@@ -296,25 +297,25 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '500',
   },
-  footerText: {color: color.white, fontSize: 17, fontWeight: '500'},
+  footerText: {color: light.black, fontSize: 17, fontWeight: '500'},
   signInWith: {
     fontSize: 17,
-    color: color.white,
+    color: light.black,
     textAlign: 'center',
     fontWeight: '500',
   },
   rememberMeText: {
     fontSize: 17,
-    color: 'white',
+    color: light.black,
     marginLeft: 8,
     fontWeight: '500',
   },
   iconEyeBtn: {position: 'absolute', right: 20, top: 14.5, bottom: 14.5},
-  scroll: {paddingHorizontal: 32},
+  scroll: {paddingHorizontal: 32, backgroundColor: 'white'},
   signInText: {
     fontSize: 30,
     fontWeight: 'bold',
-    color: 'white',
+    color: color.primary,
     marginVertical: 36,
   },
   socialField: {flexDirection: 'row', justifyContent: 'center'},
@@ -325,23 +326,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginHorizontal: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: color.primary,
+    overflow: 'hidden',
   },
   mb19: {marginBottom: 19},
   logo: {
     height: appSize(120),
     width: appSize(250),
     alignSelf: 'center',
-    tintColor: 'white',
+    tintColor: color.primary,
   },
   textInput: {
     height: 53,
     borderWidth: 3,
-    borderColor: 'white',
+    borderColor: color.primary,
     borderRadius: 25,
     paddingLeft: 20,
     fontSize: 17,
     fontWeight: '500',
-    color: 'white',
+    color: color.primary,
     justifyContent: 'center',
   },
   actionsField: {

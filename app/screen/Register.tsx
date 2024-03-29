@@ -24,6 +24,7 @@ import AppStyles from 'elements/AppStyles';
 import IconEye from 'assets/icons/IconEye';
 import moment from 'moment';
 import IconCheckBox from 'assets/icons/IconCheckBox';
+import light from 'vn.starlingTech/theme/color/light';
 
 export default function () {
   const insets = useSafeAreaInsets();
@@ -33,7 +34,7 @@ export default function () {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [gender, setGender] = useState('Male');
+  const [gender, setGender] = useState('male');
 
   const [agreed, setAgreed] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -100,20 +101,20 @@ export default function () {
       <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
         style={[AppStyles.grow, {paddingTop: 21 + insets.top}, styles.scroll]}>
-        <Text style={styles.signUpText}>Sign in</Text>
+        <Text style={styles.signUpText}>Đăng ký</Text>
 
         <View style={[AppStyles.fill, {marginBottom: 105 + insets.bottom}]}>
           <View style={[AppStyles.row, styles.mb20]}>
             <TextInput
-              placeholder="First name"
-              placeholderTextColor="#FFFFFF80"
+              placeholder="Họ"
+              placeholderTextColor={color.primary}
               style={[styles.textInput, {marginRight: appSize(19)}]}
               value={firstName}
               onChangeText={setFirstName}
             />
             <TextInput
-              placeholder="Last name"
-              placeholderTextColor="#FFFFFF80"
+              placeholder="Tên"
+              placeholderTextColor={color.primary}
               style={styles.textInput}
               value={lastName}
               onChangeText={setLastName}
@@ -123,8 +124,8 @@ export default function () {
           <TextInput
             value={email}
             onChangeText={setEmail}
-            placeholder="Email address"
-            placeholderTextColor="#FFFFFF80"
+            placeholder="Địa chỉ email"
+            placeholderTextColor={color.primary}
             style={[styles.textInput, styles.mb20]}
             inputMode="email"
             keyboardType="email-address"
@@ -132,8 +133,8 @@ export default function () {
 
           <View style={styles.mb20}>
             <TextInput
-              placeholder="Password"
-              placeholderTextColor="#FFFFFF80"
+              placeholder="Mật khẩu"
+              placeholderTextColor={color.primary}
               style={styles.textInput}
               value={password}
               onChangeText={setPassword}
@@ -148,8 +149,8 @@ export default function () {
 
           <View style={styles.mb20}>
             <TextInput
-              placeholder="Confirm Password"
-              placeholderTextColor="#FFFFFF80"
+              placeholder="Nhập lại mật khẩu"
+              placeholderTextColor={color.primary}
               style={styles.textInput}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -163,7 +164,7 @@ export default function () {
           </View>
 
           <View style={styles.mb20}>
-            <Text style={[styles.text, styles.mb7]}>Date of birth</Text>
+            <Text style={[styles.text, styles.mb7]}>Ngày sinh</Text>
             {error && (
               <Text style={[styles.text, {color: color.danger}, styles.mb7]}>
                 {error}
@@ -171,7 +172,7 @@ export default function () {
             )}
             <TextInput
               placeholder="DD/MM/YYYY"
-              placeholderTextColor="#FFFFFF80"
+              placeholderTextColor={color.primary}
               style={styles.textInput}
               value={dateOfBirth}
               onChangeText={handleChangeDateOfBirth}
@@ -180,17 +181,17 @@ export default function () {
           </View>
 
           <View style={styles.mb20}>
-            <Text style={[styles.text, styles.mb7]}>Gender</Text>
+            <Text style={[styles.text, styles.mb7]}>Giới tính</Text>
 
             <View style={AppStyles.row}>
               {genders.map(g => {
-                const isSelected = g === gender;
+                const isSelected = g.value === gender;
                 return (
                   <TouchableOpacity
-                    key={g}
-                    onPress={() => setGender(g)}
+                    key={g.value}
+                    onPress={() => setGender(g.value)}
                     style={[styles.genderBtn, !isSelected && styles.disabled]}>
-                    <Text style={styles.text}>{g}</Text>
+                    <Text style={styles.text}>{g.label}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -199,12 +200,12 @@ export default function () {
 
           <View style={[AppStyles.row, styles.mb20]}>
             <TouchableOpacity onPress={() => setAgreed(!agreed)}>
-              <IconCheckBox isChecked={agreed} color={'#F9F9F9'} />
+              <IconCheckBox isChecked={agreed} color={color.primary} />
             </TouchableOpacity>
 
             <Text style={[styles.text, {marginLeft: appSize(11)}]}>
-              I Agree with <Text style={styles.spanText}>privacy</Text> and{' '}
-              <Text style={styles.spanText}>policy</Text>
+              Tôi đồng ý với <Text style={styles.spanText}>chính sách</Text> and{' '}
+              <Text style={styles.spanText}>bảo mật</Text>
             </Text>
           </View>
 
@@ -223,19 +224,19 @@ export default function () {
             processing={processing}
             height={51}
             width={326}
-            text="Sign in"
+            text="Đăng ký"
             onPress={handleRegister}
             style={styles.mb20}
             backgroundColor="#635A8F"
           />
 
           <View style={AppStyles.rowCenterBetween}>
-            <Text style={styles.text}>Already have an account ?</Text>
+            <Text style={styles.text}>Bạn đã có tài khoản?</Text>
             <TouchableOpacity
               onPress={() => {
                 navigation.goBack();
               }}>
-              <Text style={styles.signInText}>Sign in</Text>
+              <Text style={styles.signInText}>Đăng nhập</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -244,7 +245,10 @@ export default function () {
   );
 }
 
-const genders = ['Male', 'Female'];
+const genders = [
+  {value: 'male', label: 'Nam'},
+  {value: 'female', label: 'Nữ'},
+];
 
 const styles = StyleSheet.create({
   signInText: {
@@ -258,33 +262,33 @@ const styles = StyleSheet.create({
     height: 53,
     width: 87,
     borderWidth: 3,
-    borderColor: 'white',
+    borderColor: color.primary,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 31,
   },
   mb7: {marginBottom: appSize(7)},
-  text: {fontSize: 17, color: 'white', fontWeight: '500'},
+  text: {fontSize: 17, color: light.black, fontWeight: '500'},
   iconEyeBtn: {position: 'absolute', right: 20, top: 14.5, bottom: 14.5},
   mb20: {marginBottom: 20},
   textInput: {
     height: 53,
     flex: 1,
     borderWidth: 3,
-    borderColor: 'white',
+    borderColor: color.primary,
     borderRadius: 25,
     paddingLeft: 20,
     fontSize: 17,
     fontWeight: '500',
-    color: 'white',
+    color: color.primary,
     justifyContent: 'center',
   },
   signUpText: {
     fontSize: 30,
     fontWeight: 'bold',
-    color: 'white',
+    color: color.primary,
     marginBottom: 36,
   },
-  scroll: {paddingHorizontal: 32},
+  scroll: {paddingHorizontal: 32, backgroundColor: color.white},
 });

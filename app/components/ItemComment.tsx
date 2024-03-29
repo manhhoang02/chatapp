@@ -1,109 +1,134 @@
-import {appSize} from '@abong.code/config/AppConstant';
-import {consoleLog} from '@abong.code/helpers/logHelper';
 import color from '@abong.code/theme/color';
+import {AppBlock, AppText, AppTouchableOpacity} from '@starlingtech/element';
 import {Comment} from 'app/api/comment.type';
 import moment from 'moment';
-import React from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {ReactNode, useState} from 'react';
+import {Alert, Pressable, StyleSheet, Text} from 'react-native';
+import LinearAvatar from './LinearAvatar';
+import light from 'vn.starlingTech/theme/color/light';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const GRAY = '#66676c';
+const AVATAR_SIZE = 48;
 
 export default function ({item}: {item: Comment}) {
-  consoleLog(item, 'ee');
   return (
-    <View style={styles.flex}>
-      <View style={styles.content}>
-        <Image
-          source={
-            item.author.avatar
-              ? {uri: item.author.avatar}
-              : require('assets/image/profile.png')
-          }
-          style={{
-            width: appSize(40),
-            height: appSize(40),
-            marginRight: appSize(10),
-            borderRadius: appSize(40),
-          }}
-          resizeMode="contain"
+    <Item
+      item={item}
+      avatarUri={item.author.avatar}
+      avatarSize={AVATAR_SIZE}
+      renderListReply={({item: cmt, index}) => (
+        <Item
+          key={index}
+          avatarSize={AVATAR_SIZE - 8}
+          item={cmt}
+          avatarUri={cmt.author.avatar}
         />
-        <View>
-          <View style={styles.viewComment}>
-            <Text style={styles.nameAuthor}>
+      )}
+    />
+  );
+}
+
+interface ItemProps {
+  avatarSize: number;
+  item: Comment;
+  avatarUri: string;
+  renderListReply?: ({
+    item,
+    index,
+  }: {
+    item: Comment;
+    index: number;
+  }) => ReactNode;
+}
+function Item(props: ItemProps) {
+  const {avatarSize, item, avatarUri, renderListReply} = props;
+
+  const [isCmtLiked, setIsCmtLiked] = useState(false);
+  const [quantityLikes, setQuantityLikes] = useState(0);
+
+  const handleLike = () => {
+    setIsCmtLiked(!isCmtLiked);
+    if (!isCmtLiked) {
+      setQuantityLikes(quantityLikes + 1);
+    } else {
+      setQuantityLikes(quantityLikes - 1);
+    }
+  };
+
+  const onLongPress = () => {
+    Alert.alert('ok');
+  };
+
+  return (
+    <AppBlock row>
+      <LinearAvatar size={avatarSize} uri={avatarUri} />
+
+      <AppBlock flex>
+        <AppBlock flex mb={10}>
+          <Pressable style={styles.bubble} onLongPress={onLongPress}>
+            <Text style={styles.author}>
               {item.author.first_name + ' ' + item.author.last_name}
             </Text>
-            <Text style={{color: color.black}}>{item.text}</Text>
-          </View>
-          <View style={[styles.row, {padding: appSize(5)}]}>
-            <Text style={styles.textAction}>
-              {moment(item.createdAt).fromNow()}
+
+            <Text style={styles.text}>{item.text}</Text>
+          </Pressable>
+
+          <AppBlock mt={6} row>
+            <Text style={[styles.text, {color: GRAY}]}>
+              {moment(item.createdAt).fromNow(true)}
             </Text>
-            <TouchableOpacity style={{marginHorizontal: appSize(20)}}>
-              <Text style={styles.textAction}>Thích</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={styles.textAction}>Phản hồi</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      {item.comments.map(cmt => {
-        return (
-          <View key={cmt._id} style={[styles.row, {marginLeft: appSize(50)}]}>
-            <Image
-              source={
-                cmt.author.avatar
-                  ? {uri: cmt.author.avatar}
-                  : require('assets/image/profile.png')
-              }
-              style={{
-                width: appSize(30),
-                height: appSize(30),
-                marginRight: appSize(10),
-                borderRadius: appSize(40),
-              }}
-              resizeMode="contain"
-            />
-            <View>
-              <View style={styles.viewComment}>
-                <Text style={styles.nameAuthor}>
-                  {cmt.author.first_name + ' ' + cmt.author.last_name}
-                </Text>
-                <Text style={{color: color.black}}>{cmt.text}</Text>
-              </View>
-              <View style={[styles.row, {padding: appSize(5)}]}>
-                <Text style={styles.textAction}>
-                  {moment(cmt.createdAt).fromNow()}
-                </Text>
-                <TouchableOpacity style={{marginHorizontal: appSize(20)}}>
-                  <Text style={styles.textAction}>Thích</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        );
-      })}
-    </View>
+            <AppTouchableOpacity
+              ml={16}
+              activeOpacity={0.6}
+              onPress={handleLike}>
+              <Text
+                style={[styles.text, {color: isCmtLiked ? light.red : GRAY}]}>
+                Thích
+              </Text>
+            </AppTouchableOpacity>
+            <AppTouchableOpacity ml={16} activeOpacity={0.6}>
+              <Text style={[styles.text, {color: GRAY}]}>Trả lời</Text>
+            </AppTouchableOpacity>
+
+            {quantityLikes !== 0 && (
+              <AppBlock flex justifyContent="flex-end" row alignItems="center">
+                <Ionicons
+                  name="heart-circle-outline"
+                  size={18}
+                  color={light.red}
+                />
+                <AppText size={13} color={'black'} ml={4}>
+                  {quantityLikes.toLocaleString()}
+                </AppText>
+              </AppBlock>
+            )}
+          </AppBlock>
+        </AppBlock>
+
+        {item.comments && item.comments.length > 0
+          ? item.comments.map((cmt, index) =>
+              renderListReply ? renderListReply({item: cmt, index}) : null,
+            )
+          : null}
+      </AppBlock>
+    </AppBlock>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {flexDirection: 'row'},
-  flex: {flex: 1},
-  content: {
-    flexDirection: 'row',
+  bubble: {
+    paddingVertical: 6,
+    backgroundColor: light.light_gray,
+    paddingHorizontal: 12,
+    flex: 1,
+    borderRadius: 8,
+    width: '100%',
   },
-  viewComment: {
-    backgroundColor: color.black006,
-    padding: appSize(10),
-    borderRadius: appSize(10),
-  },
-  nameAuthor: {
+  author: {
+    fontSize: 14,
     fontWeight: 'bold',
-    fontSize: appSize(16),
-    marginBottom: appSize(5),
-    color: color.black,
+    color: color.secondary,
   },
-  textAction: {
-    color: color.textBtnLike,
-    fontWeight: '600',
-  },
+  text: {fontSize: 14, fontWeight: '500'},
 });

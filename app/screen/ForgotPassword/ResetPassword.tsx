@@ -82,16 +82,16 @@ export default function ({
         <TouchableOpacity
           style={styles.mb20}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={24} color={color.white} />
+          <Ionicons name="arrow-back-outline" size={24} color={color.primary} />
         </TouchableOpacity>
 
-        <Text style={styles.resetText}>Reset Password</Text>
+        <Text style={styles.resetText}>Tạo mật khẩu mới</Text>
 
-        <AppText style={styles.text}>Enter new password</AppText>
+        <AppText style={styles.text}>Nhập mật khẩu mới</AppText>
         <View style={styles.mb20}>
           <TextInput
-            placeholder="New password"
-            placeholderTextColor="#FFFFFF80"
+            placeholder="Mật khẩu mới"
+            placeholderTextColor={color.primary}
             style={styles.textInput}
             value={password}
             onChangeText={setPassword}
@@ -104,11 +104,11 @@ export default function ({
           </TouchableOpacity>
         </View>
 
-        <AppText style={styles.text}>Confirm new password</AppText>
+        <AppText style={styles.text}>Nhập lại mật khẩu mới</AppText>
         <View style={styles.mb20}>
           <TextInput
-            placeholder="Confirm new password"
-            placeholderTextColor="#FFFFFF80"
+            placeholder="Xác nhận mật khẩu mới"
+            placeholderTextColor={color.primary}
             style={styles.textInput}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -117,7 +117,7 @@ export default function ({
           <TouchableOpacity
             onPress={() => setShowConfirmPW(!showConfirmPW)}
             style={styles.iconEyeBtn}>
-            <IconEye hide={showConfirmPW} />
+            <IconEye hide={showConfirmPW} color={color.primary} />
           </TouchableOpacity>
         </View>
 
@@ -125,7 +125,7 @@ export default function ({
           disabled={!password || !confirmPassword}
           processing={processing}
           height={51}
-          text="Submit"
+          text="Xác nhận"
           width={326}
           backgroundColor="#635A8F"
           onPress={handleChange}
@@ -136,26 +136,31 @@ export default function ({
 }
 
 const styles = StyleSheet.create({
-  text: {fontSize: 17, color: 'white', fontWeight: '500', marginBottom: 8},
+  text: {
+    fontSize: 17,
+    color: color.primary,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
   iconEyeBtn: {position: 'absolute', right: 20, top: 14.5, bottom: 14.5},
   mb20: {marginBottom: 20},
   textInput: {
     height: 53,
     flex: 1,
     borderWidth: 3,
-    borderColor: 'white',
+    borderColor: color.primary,
     borderRadius: 25,
     paddingLeft: 20,
     fontSize: 17,
     fontWeight: '500',
-    color: 'white',
+    color: color.primary,
     justifyContent: 'center',
   },
   resetText: {
     fontSize: 30,
     fontWeight: 'bold',
-    color: 'white',
+    color: color.primary,
     marginBottom: 36,
   },
-  scroll: {paddingHorizontal: 32},
+  scroll: {paddingHorizontal: 32, backgroundColor: color.white},
 });

@@ -16,7 +16,6 @@ import {
 import AppContainer from 'app/components/Global/AppContainer';
 import AppStyles from 'elements/AppStyles';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import light from 'vn.starlingTech/theme/color/light';
 import {AppBlock, AppText, AppTouchableOpacity} from '@starlingtech/element';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
 
@@ -75,13 +74,13 @@ export default function ({
         <TouchableOpacity
           style={styles.mb20}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={24} color={color.white} />
+          <Ionicons name="arrow-back-outline" size={24} color={color.primary} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, styles.mb20]}>Enter code</Text>
+        <Text style={[styles.title, styles.mb20]}>Xác nhận OTP</Text>
 
         <Text style={styles.desc}>
-          Enter the 4-digit code we sent you at email{'\n'}
+          Nhập mã gồm 6 chữ số chúng tôi đã gửi cho bạn qua email{'\n'}
           {route.params.email}
         </Text>
 
@@ -92,12 +91,12 @@ export default function ({
           onCodeChanged={setOtp}
           autoFocusOnLoad
           codeInputFieldStyle={styles.codeInputFieldStyle}
-          selectionColor="white"
+          selectionColor={color.primary}
         />
 
-        <AppBlock mv={20} row alignItems="center">
-          <AppText size={16} color="white" weight="500">
-            You have not received the OTP code.
+        <AppBlock mv={20} row alignItems="center" justifyContent="center">
+          <AppText size={16} color="black" weight="500">
+            Bạn chưa nhận được mã OTP.
           </AppText>
 
           {visible ? (
@@ -105,7 +104,7 @@ export default function ({
           ) : (
             <AppTouchableOpacity ml={4} onPress={handleReSend}>
               <AppText size={16} color="primary" weight="500">
-                Resend
+                Gửi lại
               </AppText>
             </AppTouchableOpacity>
           )}
@@ -136,7 +135,7 @@ const styles = StyleSheet.create({
     height: 58,
     borderWidth: 3,
     borderRadius: 10,
-    color: light.white,
+    color: color.primary,
     borderColor: '#8E63D6',
     fontWeight: '500',
     fontSize: 21,
@@ -154,12 +153,12 @@ const styles = StyleSheet.create({
   },
   desc: {
     fontSize: 15,
-    color: color.white,
+    color: color.primary,
     fontWeight: '500',
     lineHeight: 26.5,
     marginBottom: 32,
   },
-  title: {fontSize: 30, color: color.white, fontWeight: 'bold'},
-  scroll: {paddingHorizontal: 32},
+  title: {fontSize: 30, color: color.primary, fontWeight: 'bold'},
+  scroll: {paddingHorizontal: 32, backgroundColor: color.white},
   mb20: {marginBottom: 20},
 });
