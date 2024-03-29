@@ -4,12 +4,14 @@ import {consoleLog} from '@abong.code/helpers/logHelper';
 import color from '@abong.code/theme/color';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {AppBlock, AppText} from '@starlingtech/element';
 import {getAllChats} from 'app/api/chat';
 import {ChatProps} from 'app/api/chat.type';
-import Header from 'app/components/Header';
+import LinearAvatar from 'app/components/LinearAvatar';
 import {ParamsStack} from 'app/navigation/params';
+import AppStyles from 'elements/AppStyles';
 import React, {useEffect, useState} from 'react';
-import {FlatList, Image, TouchableOpacity} from 'react-native';
+import {FlatList, TouchableOpacity} from 'react-native';
 import {StyleSheet, Text, View} from 'react-native';
 
 export default function () {
@@ -23,13 +25,13 @@ export default function () {
     const countImages = item.lastMessage
       ? item.lastMessage.files.filter(
           e => e.includes('.png') || e.includes('.jpg'),
-        )
-      : [];
+        ).length
+      : 0;
     const countVideos = item.lastMessage
       ? item.lastMessage.files.filter(
           e => e.includes('.mp4') || e.includes('.mov'),
-        )
-      : [];
+        ).length
+      : 0;
 
     const handlePress = () => {
       socket.emit('join-chat', item._id);
@@ -42,27 +44,20 @@ export default function () {
     };
     return (
       <TouchableOpacity style={styles.cardChat} onPress={handlePress}>
-        <Image
-          source={
-            friend?.avatar
-              ? {uri: friend?.avatar}
-              : require('assets/image/profile.png')
-          }
-          style={styles.avatar}
-        />
-        <View>
+        <LinearAvatar uri={friend?.avatar} size={58} />
+        <AppBlock ml={4}>
           <Text style={styles.nameChat}>{chatName}</Text>
           {item.lastMessage &&
             (item.lastMessage.text ? (
               <Text style={styles.lastMessage}>{item.lastMessage.text}</Text>
             ) : (
-              <Text style={styles.lastMessage}>
+              <Text style={styles.lastMessage} numberOfLines={1}>
                 {item.lastMessage.senderId === user._id ? 'Bạn' : chatName} đã
-                gửi {countImages.length > 0 ? countImages?.length + ' ảnh' : ''}
-                {countVideos.length > 0 ? countVideos?.length + ' video' : ''}
+                gửi {countImages > 0 ? countImages + ' ảnh' : ''}
+                {countVideos > 0 ? countVideos + ' video' : ''}
               </Text>
             ))}
-        </View>
+        </AppBlock>
       </TouchableOpacity>
     );
   };
@@ -82,37 +77,44 @@ export default function () {
         .catch(err => console.log(err));
     });
   }, [socket, user._id]);
+
   return (
     <View style={styles.container}>
-      <View style={styles.boxChats}>
-        <FlatList
-          data={chats}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: appSize(116),
-            paddingBottom: appSize(80),
-          }}
-        />
-      </View>
-      <Header title="Tin nhắn" />
+      <Text style={styles.title}>Tin nhắn</Text>
+      <FlatList
+        data={chats}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={AppStyles.grow}
+        ListEmptyComponent={
+          <AppBlock flex center>
+            <AppText size={50}>🤷‍♂️</AppText>
+            <Text style={styles.titleEmpty}>
+              Không có tin nhắn để hiển thị.
+            </Text>
+          </AppBlock>
+        }
+      />
     </View>
   );
 }
 const styles = StyleSheet.create({
+  titleEmpty: {
+    textAlign: 'center',
+    fontSize: appSize(16),
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: color.primary,
+    marginVertical: 10,
+  },
+
   container: {
     flex: 1,
-  },
-  boxChats: {
-    flex: 1,
-    paddingHorizontal: appSize(16),
-  },
-  avatar: {
-    height: appSize(50),
-    width: appSize(50),
-    borderRadius: appSize(50),
-    marginRight: appSize(10),
+    paddingHorizontal: 12,
+    backgroundColor: color.white,
   },
   cardChat: {
     flexDirection: 'row',
@@ -121,7 +123,8 @@ const styles = StyleSheet.create({
   },
   nameChat: {
     fontWeight: 'bold',
-    marginBottom: appSize(5),
+    marginBottom: appSize(2),
+    fontSize: 17,
     color: color.black,
   },
   lastMessage: {
