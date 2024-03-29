@@ -19,11 +19,12 @@ const getPosts = async (page: number, pageSize: number): Promise<Post[]> => {
     });
 };
 
-export const useGetPosts = (page: number, pageSize: number, reload: number) =>
+export const useGetPosts = (page: number, pageSize: number) =>
   useQuery({
-    queryKey: ['Posts', page, reload],
+    queryKey: ['Posts', page],
     queryFn: () => getPosts(page, pageSize),
   });
+
 export const createPost = async (params: FormData): Promise<Post> => {
   return await axios
     .post(`${Config.BASE_URL}/post`, params, {

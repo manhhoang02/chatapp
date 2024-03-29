@@ -20,6 +20,7 @@ import {useFindUsers} from 'app/api/auth';
 import {useNavigation} from '@react-navigation/native';
 import {ParamsStack} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {friendsData} from 'app/data/friends';
 
 type Props = {
   isVisible: boolean;
@@ -126,7 +127,7 @@ export default function ({isVisible, onClose}: Props) {
         <View style={[styles.container, {paddingTop: top}]}>
           <View style={styles.header}>
             <Ionicons
-              name="ios-close-circle-outline"
+              name="close"
               size={24}
               onPress={onClose}
               color={color.black}
@@ -143,7 +144,7 @@ export default function ({isVisible, onClose}: Props) {
           <FlatList
             refreshing={refreshing.current}
             onRefresh={onRefresh}
-            data={resData}
+            data={friendsData}
             keyExtractor={(_, index) => index.toString()}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
