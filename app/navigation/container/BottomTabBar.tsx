@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {cloneElement} from 'react';
 import {TouchableOpacity, StyleSheet} from 'react-native';
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import color from '@abong.code/theme/color';
@@ -60,7 +60,7 @@ export default function ({state, descriptors, navigation}: BottomTabBarProps) {
             onPress={onPress}
             onLongPress={onLongPress}
             style={styles.btnBottomTab}>
-            {tabIcon[index].icon}
+            {cloneElement(tabIcon[index].icon, {isFocused})}
             {isFocused && (
               <Animated.View
                 exiting={SlideOutDown}

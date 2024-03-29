@@ -1,11 +1,25 @@
 import * as React from 'react';
-import Svg, {SvgProps, Path} from 'react-native-svg';
-const IconMessage = (props: SvgProps) => (
-  <Svg viewBox="0 0 24 24" width={24} height={24} {...props}>
+import {SvgProps, Path} from 'react-native-svg';
+import AnimatedIconContainer from './AnimatedIconContainer';
+
+interface Props extends SvgProps {
+  isFocused?: boolean;
+}
+
+const IconMessage = (props: Props) => (
+  <AnimatedIconContainer {...props}>
     <Path
       fill="#635A8F"
-      d="M12.85,.03C9.38-.21,5.97,1.06,3.51,3.52,1.06,5.97-.21,9.37,.03,12.85c.43,6.25,5.83,11.15,12.29,11.15h6.36c3.08,0,5.32-2.58,5.32-6.13v-5.55C24,5.86,19.1,.46,12.85,.03Zm8.15,17.84c0,1.9-.91,3.13-2.32,3.13h-6.36c-4.89,0-8.98-3.67-9.3-8.35-.18-2.61,.77-5.17,2.61-7.01,1.69-1.69,3.99-2.64,6.38-2.64,.21,0,.42,0,.63,.02,4.68,.32,8.35,4.41,8.35,9.3v5.55Z"
+      d="M24,11.246A12.011,12.011,0,1,0,12.017,24H18.5A5.507,5.507,0,0,0,24,18.5V11.34ZM21,18.5A2.5,2.5,0,0,1,18.5,21H12.017a9.041,9.041,0,0,1-6.731-3.011,8.926,8.926,0,0,1-2.227-7.034,9.038,9.038,0,0,1,7.788-7.882A9.484,9.484,0,0,1,12.02,3a8.933,8.933,0,0,1,5.739,2.066A9.038,9.038,0,0,1,21,11.389Z"
     />
-  </Svg>
+    <Path
+      fill="#635A8F"
+      d="M9.5,11h3a1.5,1.5,0,0,0,0-3h-3a1.5,1.5,0,0,0,0,3Z"
+    />
+    <Path
+      fill="#635A8F"
+      d="M16.5,13h-7a1.5,1.5,0,0,0,0,3h7a1.5,1.5,0,0,0,0-3Z"
+    />
+  </AnimatedIconContainer>
 );
 export default IconMessage;

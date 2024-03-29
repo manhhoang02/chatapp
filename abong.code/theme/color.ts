@@ -1,5 +1,6 @@
 export default {
   primary: '#635A8F',
+  secondary: '#6D4ACD',
   white: 'white',
   border: '#E3E5EA',
   disabled: 'rgba(0,0,0,0.26)',

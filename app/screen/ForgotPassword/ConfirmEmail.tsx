@@ -59,19 +59,19 @@ export default function () {
         <TouchableOpacity
           style={styles.mb20}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={24} color={color.white} />
+          <Ionicons name="arrow-back-outline" size={24} color={color.primary} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, styles.mb20]}>Forgot password?</Text>
+        <Text style={[styles.title, styles.mb20]}>Quên mật khẩu?</Text>
 
         <Text style={styles.desc}>
-          Enter your email and we’ll send you the{'\n'}instructions on how to
-          reset your password.
+          Nhập email của bạn và chúng tôi sẽ gửi cho bạn{'\n'}hướng dẫn về cách
+          Đặt lại mật khẩu của bạn.
         </Text>
 
         <View>
           <TextInput
-            placeholder="Enter your email address"
+            placeholder="Nhập địa chỉ email của bạn"
             placeholderTextColor="#EBE2F8"
             style={styles.textInput}
             value={email}
@@ -91,7 +91,7 @@ export default function () {
           onPress={handleConfirm}
           disabled={!email}
           style={[styles.btn, !email && styles.disabled]}>
-          <Text style={styles.btnText}>Recover Password</Text>
+          <Text style={styles.btnText}>Xác nhận</Text>
         </TouchableOpacity>
       </KeyboardAwareScrollView>
     </AppContainer>
@@ -112,18 +112,18 @@ const styles = StyleSheet.create({
   textInput: {
     fontSize: 15,
     height: 44,
-    color: color.white,
+    color: color.primary,
     fontWeight: '500',
   },
   line: {height: 3, width: '100%'},
   desc: {
     fontSize: 15,
-    color: color.white,
+    color: color.primary,
     fontWeight: '500',
     lineHeight: 26.5,
     marginBottom: 32,
   },
-  title: {fontSize: 30, color: color.white, fontWeight: 'bold'},
-  scroll: {paddingHorizontal: 32},
+  title: {fontSize: 30, color: color.primary, fontWeight: 'bold'},
+  scroll: {paddingHorizontal: 32, backgroundColor: color.white},
   mb20: {marginBottom: 20},
 });

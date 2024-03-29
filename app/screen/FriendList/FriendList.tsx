@@ -1,37 +1,35 @@
 import AppConstant, {appSize} from '@abong.code/config/AppConstant';
 import {useAppContext} from '@abong.code/context/AppProvider';
 import color from '@abong.code/theme/color';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {getProfileMe, useGetFriendList} from 'app/api/auth';
 import {Friend} from 'app/api/auth.type';
-import Header from 'app/components/Header';
-import {ParamsStack} from 'app/navigation/params';
 import moment from 'moment';
 import React, {useEffect, useRef, useState} from 'react';
-import {FlatList, TouchableOpacity} from 'react-native';
 import {Text} from 'react-native';
 import {StyleSheet, View} from 'react-native';
 import {ActivityIndicator} from 'react-native-paper';
-import Feather from 'react-native-vector-icons/Feather';
 import ItemFriendList from './container/ItemFriendList';
+import {AppBlock, AppText} from '@starlingtech/element';
+import AppStyles from 'elements/AppStyles';
+import {useRefresh} from 'app/hook/useRefresh';
+import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
+import FriendListHeader from './container/FriendList.Header';
+import {TopTabScreenProps} from 'app/navigation/params';
 
-export default function () {
+let page = 1;
+
+export default function ({navigation}: TopTabScreenProps<'Tab2'>) {
   const {user, setUser, syncData, socket} = useAppContext();
-  const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
-  const noLoadMore = useRef(false);
-  const prevData = useRef<Friend[]>([]);
-  const refreshing = useRef<boolean>(false);
-  const scrollBegin = useRef(false);
+
+  const currentList = useRef<Friend[]>([]);
+  const hasNextPage = useRef(false);
+  const refOnEndReachedCalled = useRef(true);
 
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [userSelect, setUserSelect] = useState<Friend>();
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [dataMount, setDataMount] = useState(false); // check data đã đc mount vào flatlist hay chưa
   const [reload, setReload] = useState(0);
 
-  const {data, isSuccess, isError, isFetchedAfterMount} = useGetFriendList(
+  const {data, isSuccess, isError, refetch} = useGetFriendList(
     search,
     page,
     AppConstant.LIST_SIZE,
@@ -39,71 +37,37 @@ export default function () {
   );
 
   const renderItem = ({item}: {item: Friend}) => {
-    return (
-      <ItemFriendList
-        item={item}
-        userSelect={userSelect}
-        setUserSelect={setUserSelect}
-      />
-    );
+    return <ItemFriendList item={item} />;
   };
 
-  const right = (
-    <TouchableOpacity
-      onPress={() => {
-        navigation.navigate('FriendRequests');
-      }}>
-      <Feather name="user-plus" size={24} color={color.primary} />
-      {user.friend_requests.length > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.textBadge}>
-            {user.friend_requests.length <= 99
-              ? user.friend_requests.length
-              : 99}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
-  );
-  const ListEmptyComponent =
-    isFetchedAfterMount && dataMount ? (
-      <View>
-        <Text style={styles.titleEmptyFlatlist}>
-          Không có bạn bè để hiển thị.
-        </Text>
-      </View>
-    ) : null;
-
-  if (isFetchedAfterMount) {
-    refreshing.current = false;
-  }
-  const onRefresh = () => {
-    refreshing.current = true;
-    setDataMount(false);
-    setPage(1);
+  const onRefreshing = () => {
+    onRefresh();
+    page = 1;
   };
+
   const onEndReached = () => {
-    if (scrollBegin.current) {
-      if (noLoadMore.current === false) {
-        setPage(prev => prev + 1);
+    if (!refOnEndReachedCalled.current) {
+      if (hasNextPage.current) {
+        page++;
+        hasNextPage.current = false;
       }
-      scrollBegin.current = false;
+      refOnEndReachedCalled.current = true;
     }
   };
+
   useEffect(() => {
-    if (isSuccess && data && data.users) {
-      refreshing.current = false;
+    if (isSuccess && data) {
       if (page === 1) {
-        prevData.current = data.users || [];
+        currentList.current = data.users;
       } else {
-        prevData.current = [...prevData.current, ...data.users];
+        currentList.current = [...currentList.current, ...data.users];
       }
-      setFriends(prevData.current);
-      setDataMount(true);
-      noLoadMore.current = data.users.length < AppConstant.LIST_SIZE;
+      setFriends(currentList.current);
+      hasNextPage.current = data.users.length > AppConstant.LIST_SIZE;
     } else if (isError) {
-      noLoadMore.current = true;
+      hasNextPage.current = false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, data, isSuccess, isError]);
 
   useEffect(() => {
@@ -119,75 +83,71 @@ export default function () {
     setReload(moment().unix());
   }, [syncData.friends]);
 
+  const {isRefreshing, onRefresh} = useRefresh(refetch);
+
   return (
     <View style={styles.container}>
-      <View style={styles.boxChats}>
-        <FlatList
-          refreshing={refreshing.current}
-          onRefresh={onRefresh}
-          data={friends}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingTop: appSize(150),
-            paddingBottom: appSize(90),
-          }}
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.1}
-          ListEmptyComponent={ListEmptyComponent}
-          ListFooterComponent={
-            noLoadMore.current ? null : (
-              <ActivityIndicator color={color.primary} />
-            )
-          }
-          onMomentumScrollBegin={() => {
-            scrollBegin.current = true;
-          }}
-        />
-      </View>
-      <Header
-        title="Bạn bè"
-        right={right}
-        showSearch
-        onChangeText={text => {
-          setFriends([]);
-          setDataMount(false);
-          setTimeout(() => {
-            setSearch(text);
-            setPage(1);
-          }, 100);
+      <FriendListHeader
+        searchText={search}
+        setSearchText={setSearch}
+        onAddIcon={() => navigation.navigate('FriendRequests')}
+      />
+
+      <KeyboardAwareFlatList
+        refreshing={isRefreshing}
+        onRefresh={onRefreshing}
+        data={friends}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={AppStyles.grow}
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.1}
+        ListHeaderComponent={
+          friends.length > 0 ? (
+            <AppBlock mt={12}>
+              <AppText size={18} weight="700">
+                {friends.length} Bạn bè
+              </AppText>
+            </AppBlock>
+          ) : null
+        }
+        ListHeaderComponentStyle={styles.mb10}
+        ListEmptyComponent={
+          <AppBlock flex center>
+            <AppText size={50}>🤷‍♂️</AppText>
+            <Text style={styles.titleEmptyFlatlist}>
+              Không có bạn bè để hiển thị.
+            </Text>
+          </AppBlock>
+        }
+        ListFooterComponent={
+          hasNextPage.current ? (
+            <ActivityIndicator color={color.primary} />
+          ) : null
+        }
+        onMomentumScrollBegin={() => {
+          refOnEndReachedCalled.current = false;
         }}
+        enableResetScrollToCoords={false}
       />
     </View>
   );
 }
 const styles = StyleSheet.create({
+  mb10: {marginBottom: 10},
   container: {
     flex: 1,
+    backgroundColor: color.white,
+    paddingHorizontal: 12,
   },
   boxChats: {
     flex: 1,
-    paddingHorizontal: appSize(16),
+    paddingHorizontal: appSize(12),
+    backgroundColor: color.white,
   },
   titleEmptyFlatlist: {
     textAlign: 'center',
     fontSize: appSize(16),
-  },
-  badge: {
-    backgroundColor: color.red,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: appSize(100),
-    position: 'absolute',
-    right: -10,
-    top: -15,
-    width: appSize(20),
-    height: appSize(20),
-  },
-  textBadge: {
-    fontSize: appSize(12),
-    color: color.white,
-    fontWeight: 'bold',
   },
 });

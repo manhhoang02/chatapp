@@ -78,7 +78,7 @@ export default function ({isVisible, onClose}: Props) {
           <View style={styles.header}>
             <Ionicons
               color={color.black}
-              name="ios-close-circle-outline"
+              name="close"
               size={24}
               onPress={() => {
                 onClose();

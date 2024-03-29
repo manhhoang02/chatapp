@@ -1,13 +1,20 @@
-import {NavigatorScreenParams} from '@react-navigation/native';
+import {MaterialTopTabScreenProps} from '@react-navigation/material-top-tabs';
+import {
+  CompositeScreenProps,
+  NavigatorScreenParams,
+} from '@react-navigation/native';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
 
-export type ParamsBottomTab = {
-  Home: undefined;
-  Chats: undefined;
-  FriendList: undefined;
-  Menu: undefined;
+export type ParamsTopTab = {
+  Tab1: undefined;
+  Tab2: undefined;
+  Tab3: undefined;
+  Tab4: undefined;
+  Tab5: undefined;
 };
+
 export type ParamsStack = {
-  TabScreen: NavigatorScreenParams<ParamsBottomTab>;
+  TabScreen: NavigatorScreenParams<ParamsTopTab>;
   ChatView: {
     chatId: string;
     chatName: string;
@@ -16,6 +23,7 @@ export type ParamsStack = {
   };
   Profile: {id: string};
   FriendRequests: undefined;
+  EmptyScreen1: undefined;
 };
 export type ParamsAuth = {
   SplashScreen: undefined;
@@ -25,3 +33,9 @@ export type ParamsAuth = {
   ConfirmOTP: {email: string};
   ResetPassword: {email: string};
 };
+
+export type TopTabScreenProps<T extends keyof ParamsTopTab> =
+  CompositeScreenProps<
+    MaterialTopTabScreenProps<ParamsTopTab, T>,
+    NativeStackScreenProps<ParamsStack, keyof ParamsStack>
+  >;

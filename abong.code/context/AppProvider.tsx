@@ -18,6 +18,7 @@ import Toast, {
 } from 'react-native-toast-message';
 import color from '@abong.code/theme/color';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import AppStyles from 'elements/AppStyles';
 
 const queryClient = new QueryClient();
 
@@ -57,7 +58,7 @@ const AppProvider = ({children}: any) => {
 
   return (
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{flex: 1}}>
+      <GestureHandlerRootView style={AppStyles.fill}>
         <QueryClientProvider client={queryClient}>
           <AppContext.Provider
             value={{
