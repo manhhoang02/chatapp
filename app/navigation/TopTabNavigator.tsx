@@ -8,7 +8,7 @@ import {ParamsTopTab} from './params';
 import {Host} from 'react-native-portalize';
 import Home from 'app/screen/Home/Home';
 import FriendList from 'app/screen/FriendList/FriendList';
-import Chats from 'app/screen/Chats';
+import Chats from 'app/screen/Chat/Chats';
 import Menu from 'app/screen/Menu/Menu';
 import {AppBlock, AppTouchableOpacity} from '@starlingtech/element';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import color from '@abong.code/theme/color';
 import IconAdd from 'assets/icons/IconAdd';
 import AppStyles from 'elements/AppStyles';
 import IconSearch from 'assets/icons/IconSearch';
+import Notifications from 'app/screen/Notifications';
 
 const TopTab = createMaterialTopTabNavigator<ParamsTopTab>();
 
@@ -58,7 +59,7 @@ export function TopTabNavigator() {
       <TopTab.Navigator tabBar={tabBar}>
         <TopTab.Screen name="Tab1" component={Home} />
         <TopTab.Screen name="Tab2" component={FriendList} />
-        <TopTab.Screen name="Tab3" component={EmptyScreen} />
+        <TopTab.Screen name="Tab3" component={Notifications} />
         <TopTab.Screen name="Tab4" component={Chats} />
         <TopTab.Screen name="Tab5" component={Menu} />
       </TopTab.Navigator>

@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
   },
   text: {
     paddingLeft: appSize(10),
-    fontSize: appSize(13),
+    fontSize: appSize(15),
     color: color.black,
   },
   viewIcon: {
