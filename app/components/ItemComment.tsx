@@ -7,24 +7,29 @@ import {Alert, Pressable, StyleSheet, Text} from 'react-native';
 import LinearAvatar from './LinearAvatar';
 import light from 'vn.starlingTech/theme/color/light';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useGetUserById} from 'app/api/auth';
 
 const GRAY = '#66676c';
 const AVATAR_SIZE = 48;
 
 export default function ({item}: {item: Comment}) {
+  const {data: author} = useGetUserById(item.author);
   return (
     <Item
       item={item}
-      avatarUri={item.author.avatar}
+      avatarUri={author?.avatar ?? ''}
       avatarSize={AVATAR_SIZE}
-      renderListReply={({item: cmt, index}) => (
-        <Item
-          key={index}
-          avatarSize={AVATAR_SIZE - 8}
-          item={cmt}
-          avatarUri={cmt.author.avatar}
-        />
-      )}
+      renderListReply={({item: cmt, index}) => {
+        const {data: cmtAuthor} = useGetUserById(cmt.author);
+        return (
+          <Item
+            key={index}
+            avatarSize={AVATAR_SIZE - 8}
+            item={cmt}
+            avatarUri={cmtAuthor?.avatar ?? ''}
+          />
+        );
+      }}
     />
   );
 }
@@ -42,6 +47,8 @@ interface ItemProps {
   }) => ReactNode;
 }
 function Item(props: ItemProps) {
+  const {data: author} = useGetUserById(props.item.author);
+
   const {avatarSize, item, avatarUri, renderListReply} = props;
 
   const [isCmtLiked, setIsCmtLiked] = useState(false);
@@ -68,7 +75,7 @@ function Item(props: ItemProps) {
         <AppBlock flex mb={10}>
           <Pressable style={styles.bubble} onLongPress={onLongPress}>
             <Text style={styles.author}>
-              {item.author.first_name + ' ' + item.author.last_name}
+              {author?.firstName + ' ' + author?.lastName}
             </Text>
 
             <Text style={styles.text}>{item.text}</Text>

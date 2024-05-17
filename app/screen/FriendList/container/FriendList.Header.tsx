@@ -6,7 +6,6 @@ import Feather from 'react-native-vector-icons/Feather';
 import {AppBlock, AppTouchableOpacity, appSize} from '@starlingtech/element';
 import AppStyles from 'elements/AppStyles';
 import IconSearch from 'assets/icons/IconSearch';
-import {useAppContext} from '@abong.code/context/AppProvider';
 import Animated, {
   interpolate,
   useAnimatedStyle,
@@ -23,7 +22,6 @@ import {ParamsStack, ParamsTopTab} from 'app/navigation/params';
 type Props = {
   searchText: string;
   setSearchText: (text: string) => void;
-  onAddIcon?: () => void;
 };
 
 type NavigationProps = CompositeNavigationProp<
@@ -35,7 +33,6 @@ const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const INPUT_HEIGHT = 40;
 
 const FriendListHeader = (props: Props) => {
-  const {user} = useAppContext();
   const {navigate} = useNavigation<NavigationProps>();
 
   const animInputHeight = useSharedValue(0);
@@ -67,7 +64,7 @@ const FriendListHeader = (props: Props) => {
           </AppTouchableOpacity>
           <AppTouchableOpacity onPress={() => navigate('FriendRequests')}>
             <Feather name="user-plus" size={24} color={color.primary} />
-            {user.friend_requests.length > 0 && (
+            {/* {user.friend_requests.length > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.textBadge}>
                   {user.friend_requests.length <= 99
@@ -75,7 +72,7 @@ const FriendListHeader = (props: Props) => {
                     : 99}
                 </Text>
               </View>
-            )}
+            )} */}
           </AppTouchableOpacity>
         </AppBlock>
       </AppBlock>

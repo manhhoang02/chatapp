@@ -1,4 +1,4 @@
-package com.chatapp;
+package com.funchat;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

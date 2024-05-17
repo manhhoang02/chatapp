@@ -1,9 +1,11 @@
 import {appSize} from '@abong.code/config/AppConstant';
-import {useAppContext} from '@abong.code/context/AppProvider';
-import {showToastMessageError} from '@abong.code/helpers/messageHelper';
+import {
+  showToastMessageError,
+  showToastMessageSuccess,
+} from '@abong.code/helpers/messageHelper';
 import color from '@abong.code/theme/color';
-import {getProfileMe, useAddFriend} from 'app/api/auth';
-import {Friend} from 'app/api/auth.type';
+import {getUserById, useAddFriend, useDeleteFriendRequest} from 'app/api/auth';
+import {Resp_User} from 'app/api/auth.type';
 import moment from 'moment';
 import React from 'react';
 import {TouchableOpacity, Text, StyleSheet} from 'react-native';
@@ -13,30 +15,59 @@ import {ParamsStack} from 'app/navigation/params';
 import LinearAvatar from 'app/components/LinearAvatar';
 import {AppBlock} from '@starlingtech/element';
 import light from 'vn.starlingTech/theme/color/light';
+import useAuthStore from 'app/store/authStore';
+import {useHomeStore} from 'app/store/homeStore';
+import {shallow} from 'zustand/shallow';
 
 type Props = {
-  item: Friend;
-  setReload: Function;
+  item: Resp_User;
 };
-export default function ({item, setReload}: Props) {
-  const {user, setUser, socket} = useAppContext();
+export default function ({item}: Props) {
+  const [user, dispatchUser] = useAuthStore(
+    s => [s.user, s.dispatchUser],
+    shallow,
+  );
+  const dispatchSync = useHomeStore(s => s.dispatchSync);
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
-  const {mutate: acceptFriend} = useAddFriend();
+  const {mutate: acceptR} = useAddFriend();
+  const {mutate: deleteR} = useDeleteFriendRequest();
   const handleNavigateProfile = () => {
-    navigation.navigate('Profile', {id: item._id});
+    navigation.navigate('Profile', {id: item.id});
   };
+
+  const params = {friendId: item.id, userId: user.id};
+
   const handleAccept = () => {
-    acceptFriend(item!._id, {
-      onSuccess: () => {
-        socket.emit('change-relationship', item._id);
-        getProfileMe().then(res => {
-          setUser({...user, ...res});
+    acceptR(params, {
+      onSuccess: response => {
+        showToastMessageSuccess(response.message);
+        dispatchSync({friend: moment().unix()});
+        getUserById(user.id).then(res => {
+          dispatchUser({...user, ...res});
         });
-        setReload(moment().unix());
+        navigation.goBack();
       },
       onError: () => {
-        showToastMessageError('Lỗi', 'Đã xảy ra lỗi');
+        showToastMessageError(
+          'Lỗi',
+          'Không thể thêm bạn bè. Không tìm thấy yêu cầu.',
+        );
+      },
+    });
+  };
+
+  const handleDelete = () => {
+    deleteR(params, {
+      onSuccess: response => {
+        showToastMessageSuccess(response.message);
+        getUserById(user.id).then(res => {
+          dispatchUser({...user, ...res});
+        });
+        dispatchSync({friend: moment().unix()});
+      },
+      onError: () => {
+        showToastMessageError('Lỗi', 'Không thể xóa bạn bè.');
       },
     });
   };
@@ -47,7 +78,7 @@ export default function ({item, setReload}: Props) {
 
       <AppBlock ml={6} flex>
         <Text style={styles.nameChat}>
-          {item.first_name + ' ' + item.last_name}
+          {item.firstName + ' ' + item.lastName}
         </Text>
 
         <AppBlock row mt={10}>
@@ -62,6 +93,7 @@ export default function ({item, setReload}: Props) {
           <AppBlock width={10} />
 
           <TouchableOpacity
+            onPress={handleDelete}
             style={[styles.btn, {backgroundColor: color.border}]}>
             <Text style={[{color: light.gray}, styles.textBtn]}>Xoá</Text>
           </TouchableOpacity>

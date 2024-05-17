@@ -68,7 +68,13 @@ export default function LinearAvatar({
 }
 
 const styles = StyleSheet.create({
-  text: {fontSize: 15, color: 'black', fontWeight: '500', marginTop: 5},
+  text: {
+    fontSize: 14,
+    color: 'black',
+    fontWeight: '500',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   img: {height: '100%', width: '100%'},
   add: {
     position: 'absolute',
@@ -82,23 +88,4 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   dot: {position: 'absolute', bottom: 0, zIndex: 99},
-  grediant: {
-    height: 44,
-    width: 300,
-    justifyContent: 'center',
-    alignSelf: 'center',
-  },
-  buttonContainer: {
-    flex: 1.0,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-    width: '99%',
-    margin: 1,
-  },
-  buttonText: {
-    textAlign: 'center',
-    color: '#4C64FF',
-    alignSelf: 'center',
-  },
 });

@@ -3,37 +3,38 @@ import React, {useEffect, useState} from 'react';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
-import {getProfileMe} from 'app/api/auth';
+import {appSize} from '@abong.code/config/AppConstant';
+import {getUserById} from 'app/api/auth';
 import {StyleSheet, View} from 'react-native';
 import {ActivityIndicator} from 'react-native-paper';
 import color from '@abong.code/theme/color';
 import {NavigationContainer} from '@react-navigation/native';
-import {initApiHeader} from '@abong.code/api/AppNetworking';
 import ModalCallVideo from 'app/components/modals/ModalCallVideo';
-import {consoleLog} from '@abong.code/helpers/logHelper';
+import useAuthStore from 'app/store/authStore';
+import {shallow} from 'zustand/shallow';
 
 export default function () {
-  const {socket, user, setUser, showModalCallVideo, setShowModalCallVideo} =
-    useAppContext();
-  const [isLoading, setIsLoading] = useState(true);
+  const {socket, showModalCallVideo, setShowModalCallVideo} = useAppContext();
+
+  const [user, dispatchUser] = useAuthStore(
+    s => [s.user, s.dispatchUser],
+    shallow,
+  );
+
+  const [isLoading, setIsLoading] = useState(false);
   const [dataCall, setDataCall] = useState<any>();
 
   const init = async () => {
-    const token = await AsyncStorage.getItem(AppConstant.SESSION.TOKEN);
-    if (token) {
-      initApiHeader(token);
-      getProfileMe()
-        .then(res => {
-          setUser({...res, token});
-          setIsLoading(false);
-        })
-        .catch(() => {
-          initApiHeader();
-          setIsLoading(false);
+    const uid = await AsyncStorage.getItem('id');
+    if (uid) {
+      const resUser = await getUserById(uid);
+      if (resUser) {
+        dispatchUser({
+          ...resUser,
         });
+        AsyncStorage.setItem('id', resUser.id);
+      }
     } else {
-      initApiHeader();
       setIsLoading(false);
     }
   };
@@ -41,6 +42,12 @@ export default function () {
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (user.id) {
+      setIsLoading(false);
+    }
+  }, [user.id]);
 
   useEffect(() => {
     socket.on('call', data => {
@@ -61,13 +68,12 @@ export default function () {
       </View>
     );
   }
-  consoleLog(dataCall);
 
   return (
     <NavigationContainer>
-      {user._id ? <MainNavigator /> : <AuthNavigator />}
+      {user.id ? <MainNavigator /> : <AuthNavigator />}
       {dataCall ? (
-        dataCall.friendId === user._id ? (
+        dataCall.friendId === user.id ? (
           <ModalCallVideo
             callerId={dataCall.userId}
             calleeId={dataCall.friendId}
@@ -79,7 +85,7 @@ export default function () {
         ) : null
       ) : null}
       {dataCall ? (
-        dataCall.friendId !== user._id ? (
+        dataCall.friendId !== user.id ? (
           <ModalCallVideo
             callerId={dataCall.userId}
             calleeId={dataCall.friendId}

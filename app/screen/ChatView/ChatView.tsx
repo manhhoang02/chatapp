@@ -23,21 +23,22 @@ import {ParamsStack} from 'app/navigation/params';
 import moment from 'moment';
 import DocumentPicker from 'react-native-document-picker';
 import Video from 'react-native-video';
+import useAuthStore from 'app/store/authStore';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 export default function ({
   route,
 }: NativeStackScreenProps<ParamsStack, 'ChatView'>) {
+  const {user} = useAuthStore();
+  const {top} = useSafeAreaInsets();
+
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [message, setMessage] = useState('');
-  // const [isTyping, setIsTyping] = useState(false);
-  const {user, socket, dispatchSyncData, syncData} = useAppContext();
-
-  // consoleLog(isTyping);
 
   const onSend = () => {
     const params = new FormData();
-    params.append('chatId', route.params.chatId);
-    params.append('senderId', user._id);
+    params.append('chatId', user.id);
+    params.append('senderId', user.id);
     params.append('text', message);
     sendMessage(params).then(res => {
       setMessage('');
@@ -47,22 +48,10 @@ export default function ({
         text: res.text,
         createdAt: new Date(res.createdAt),
         user: {
-          _id: user._id,
+          _id: user.id,
         },
       });
       setMessages(cloneMessages);
-      socket.emit('send-message', {
-        _id: res._id,
-        text: message,
-        createdAt: res.createdAt,
-        user: {
-          _id: user._id,
-          avatar: user.avatar,
-          name: user.first_name + ' ' + user.last_name,
-        },
-        chatId: res.chatId,
-        receiveId: route.params.friendId,
-      });
     });
   };
 
@@ -77,7 +66,7 @@ export default function ({
         params.append('files', result);
       }
       params.append('chatId', route.params.chatId);
-      params.append('senderId', user._id);
+      params.append('senderId', user.id);
 
       sendMessage(params).then(res => {
         setMessage('');
@@ -93,29 +82,11 @@ export default function ({
             .toString(),
           createdAt: new Date(res.createdAt),
           user: {
-            _id: user._id,
+            _id: user.id,
             avatar: user.avatar,
           },
         });
         setMessages(cloneMessages);
-        socket.emit('send-message', {
-          _id: res._id,
-          text: res.text,
-          createdAt: res.createdAt,
-          image: res.files
-            .filter(e => e.includes('.png') || e.includes('.jpg'))
-            .toString(),
-          video: res.files
-            .filter(e => e.includes('.mp4') || e.includes('.mov'))
-            .toString(),
-          user: {
-            _id: res.senderId,
-            avatar: user.avatar,
-            name: user.first_name + ' ' + user.last_name,
-          },
-          chatId: res.chatId,
-          receiveId: route.params.friendId,
-        });
       });
     } catch (error) {
       if (DocumentPicker.isCancel(error)) {
@@ -159,7 +130,7 @@ export default function ({
     const renderItem = ({item}: {item: string}) => {
       const propsNew: MessageImageProps<IMessage> = {
         ...props,
-        currentMessage: {...props.currentMessage, image: item},
+        // currentMessage: {...props.currentMessage, image: item},
       };
       return (
         <MessageImage {...propsNew} containerStyle={styles.imageContainer} />
@@ -174,7 +145,7 @@ export default function ({
           keyExtractor={(_, index) => index.toString()}
           renderItem={renderItem}
           style={
-            props.currentMessage?.user._id !== user._id
+            props.currentMessage?.user._id !== user.id
               ? styles.flexStart
               : styles.flexEnd
           }
@@ -211,83 +182,18 @@ export default function ({
     );
   };
 
-  useEffect(() => {
-    getAllMessages(route.params.chatId).then(response => {
-      const msg: IMessage[] = [];
-
-      response.forEach(res => {
-        msg.push({
-          _id: res._id,
-          text: res.text,
-          image: res.files
-            .filter(e => e.includes('.png') || e.includes('.jpg'))
-            .toString(),
-          video: res.files
-            .filter(e => e.includes('.mp4') || e.includes('.mov'))
-            .toString(),
-          createdAt: new Date(res.createdAt),
-          user: {
-            _id: res.sender._id,
-            name: res.sender.first_name + ' ' + res.sender.last_name,
-            avatar: res.sender.avatar
-              ? res.sender.avatar
-              : require('assets/image/profile.png'),
-          },
-        });
-      });
-      setMessages(msg);
-    });
-  }, [route.params.chatId]);
-
-  useEffect(() => {
-    return () => {
-      socket.emit('leave-chat', route.params.chatId);
-      dispatchSyncData({...syncData, chats: moment().unix()});
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  // useEffect(() => {
-  //   if (isTyping) {
-  //     setTimeout(() => {
-  //       setIsTyping(false);
-  //     }, 1000);
-  //   }
-  // }, [isTyping]);
-  useEffect(() => {
-    socket.on('received-message', dataMessage => {
-      if (route.params.chatId === dataMessage.chatId) {
-        const cloneMessages = [...messages];
-        cloneMessages.unshift({
-          _id: dataMessage._id,
-          text: dataMessage.text,
-          image: dataMessage.image,
-          video: dataMessage.video,
-          createdAt: dataMessage.createdAt,
-          user: {
-            _id: dataMessage.user._id,
-            avatar: dataMessage.user.avatar
-              ? dataMessage.user.avatar
-              : require('assets/image/profile.png'),
-          },
-        });
-        setMessages(cloneMessages);
-      }
-    });
-    // socket.on('typing', () => {
-    //   setIsTyping(true);
-    // });
-    // socket.on('not-typing', () => {
-    //   setIsTyping(false);
-    // });
-  }, [socket, messages, route.params.chatId]);
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: top}]}>
+      <HeaderChatView
+        name={'Hoang Manh'}
+        avatar={user.avatar}
+        friendId={'abc'}
+      />
       <View style={styles.container}>
         <GiftedChat
           messages={messages}
           user={{
-            _id: user._id,
+            _id: user.id,
           }}
           renderInputToolbar={renderInputToolbar}
           renderActions={renderActions}
@@ -309,11 +215,6 @@ export default function ({
           textInputProps={styles.textInputProps}
         />
       </View>
-      <HeaderChatView
-        name={route.params.chatName}
-        avatar={route.params.avatar}
-        friendId={route.params.friendId}
-      />
     </View>
   );
 }
@@ -321,7 +222,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: color.white,
-    paddingTop: appSize(25),
   },
   inputToolBarContainer: {
     alignItems: 'center',

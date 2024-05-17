@@ -1,8 +1,8 @@
-import {StyleSheet, Text} from 'react-native';
+import {Alert, StyleSheet, Text} from 'react-native';
 import React from 'react';
 import BottomSheetContainer from 'app/components/Global/BottomSheetContainer';
 import {BottomSheetModalMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
-import {Friend} from 'app/api/auth.type';
+import {Resp_User} from 'app/api/auth.type';
 import {
   AppBlock,
   AppText,
@@ -18,11 +18,19 @@ import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
 import {createChat, getChat} from 'app/api/chat';
-import {useAppContext} from '@abong.code/context/AppProvider';
+import useAuthStore from 'app/store/authStore';
+import {getUserById, useDeleteFriend} from 'app/api/auth';
+import {
+  showToastMessageError,
+  showToastMessageSuccess,
+} from '@abong.code/helpers/messageHelper';
+import {useHomeStore} from 'app/store/homeStore';
+import moment from 'moment';
+import {shallow} from 'zustand/shallow';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
-  item: Friend;
+  item: Resp_User;
 };
 
 const BUTTON_HEIGHT = 58;
@@ -32,42 +40,61 @@ const PRE_HEIGHT = BUTTON_HEIGHT * 2 + CARD_HEIGHT + 25;
 const SUF_HEIGHT = PRE_HEIGHT + BUTTON_HEIGHT;
 
 export default function ModalFriendActions({bottomRef, item}: Props) {
-  const {user} = useAppContext();
+  const [user, dispatchUser] = useAuthStore(
+    s => [s.user, s.dispatchUser],
+    shallow,
+  );
   const navigation =
     useNavigation<NativeStackNavigationProp<ParamsStack, 'TabScreen'>>();
+
+  const dispatchSync = useHomeStore(s => s.dispatchSync);
+
+  const {mutate} = useDeleteFriend();
+
+  const handleDeleteFriend = () => {
+    Alert.alert(
+      'Thồng báo',
+      'Bạn có muốn xóa ' + item.lastName + ' khỏi danh sách bạn bè không?',
+      [
+        {text: 'Hủy', style: 'cancel'},
+        {
+          text: 'Đồng ý',
+          onPress: () => {
+            mutate(
+              {friendId: item.id, userId: user.id},
+              {
+                onSuccess: () => {
+                  showToastMessageSuccess(
+                    'Thành công!',
+                    'Xóa bạn bè thành công',
+                  );
+                  bottomRef.current?.close();
+                  getUserById(user.id).then(res => {
+                    dispatchUser({...user, ...res});
+                  });
+                  dispatchSync({friend: moment().unix()});
+                },
+                onError: () => {
+                  showToastMessageError('Lỗi!', 'Xóa bạn bè thất bại');
+                },
+              },
+            );
+          },
+        },
+      ],
+    );
+  };
 
   const handleSendMsg = () => {
     bottomRef.current?.close();
 
-    getChat(user._id, item._id)
-      .then(res => {
-        if (res) {
-          navigation.navigate('ChatView', {
-            chatId: res._id,
-            chatName: item.first_name + ' ' + item.last_name,
-            avatar: item?.avatar,
-            friendId: item._id,
-          });
-        } else {
-          createChat(user._id, item._id)
-            .then(resp => {
-              navigation.navigate('ChatView', {
-                chatId: resp._id,
-                chatName: item.first_name + ' ' + item.last_name,
-                avatar: item?.avatar,
-                friendId: item._id,
-              });
-            })
-            .catch();
-        }
-      })
-      .catch();
+    navigation.navigate('ChatView');
   };
 
   const handleNavigateProfile = () => {
     bottomRef.current?.close();
     setTimeout(() => {
-      navigation.navigate('Profile', {id: item._id});
+      navigation.navigate('Profile', {id: item.id});
     }, 200);
   };
   return (
@@ -79,7 +106,7 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
         <LinearAvatar size={48} uri={item.avatar} disabled />
         <AppBlock flex ml={4}>
           <Text style={styles.nameChat}>
-            {item.first_name + ' ' + item.last_name}
+            {item.firstName + ' ' + item.lastName}
           </Text>
           <AppText size={12} color="black_70">
             {item.email}
@@ -94,7 +121,7 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
             size={30}
             style={styles.mr10}
           />
-          <Text style={styles.text}>Nhắn tin cho {item.last_name}</Text>
+          <Text style={styles.text}>Nhắn tin cho {item.lastName}</Text>
         </AppTouchableOpacity>
         <AppTouchableOpacity style={styles.btn} onPress={handleNavigateProfile}>
           <Ionicons
@@ -102,9 +129,9 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
             size={30}
             style={styles.mr10}
           />
-          <Text style={styles.text}>Trang cá nhân của {item.last_name}</Text>
+          <Text style={styles.text}>Trang cá nhân của {item.lastName}</Text>
         </AppTouchableOpacity>
-        <AppTouchableOpacity style={styles.btn}>
+        <AppTouchableOpacity style={styles.btn} onPress={handleDeleteFriend}>
           <Ionicons
             name="person-remove-outline"
             size={28}
@@ -113,10 +140,10 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
           />
           <AppBlock>
             <Text style={[styles.text, {color: light.red}]}>
-              Hủy kết bạn với {item.last_name}
+              Hủy kết bạn với {item.lastName}
             </Text>
             <AppText size={12} color="black_70">
-              Xóa {item.last_name} khỏi danh sách bạn bè
+              Xóa {item.lastName} khỏi danh sách bạn bè
             </AppText>
           </AppBlock>
         </AppTouchableOpacity>

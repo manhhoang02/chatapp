@@ -4,6 +4,9 @@ import {
   NavigatorScreenParams,
 } from '@react-navigation/native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {DefaultStreamChatGenerics} from 'stream-chat-react-native';
+import {Channel} from 'stream-chat';
+import {ChatProps} from 'app/api/chat.type';
 
 export type ParamsTopTab = {
   Tab1: undefined;
@@ -15,12 +18,13 @@ export type ParamsTopTab = {
 
 export type ParamsStack = {
   TabScreen: NavigatorScreenParams<ParamsTopTab>;
-  ChatView: {
-    chatId: string;
-    chatName: string;
-    avatar: string;
-    friendId: string;
-  };
+  ChatView: {thread: ChatProps};
+  // ChatView: {
+  //   chatId: string;
+  //   chatName: string;
+  //   avatar: string;
+  //   friendId: string;
+  // };
   Profile: {id: string};
   FriendRequests: undefined;
   EmptyScreen1: undefined;

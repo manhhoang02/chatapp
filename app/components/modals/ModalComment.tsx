@@ -1,7 +1,7 @@
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
+import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
-import {useGetComments, createComment} from 'app/api/comment';
-import {getPost, likeOrDislikePost} from 'app/api/post';
+import {useGetComments, useCreateComment} from 'app/api/comment';
+import {likeOrDislikePost, useGetPostById} from 'app/api/post';
 import React, {cloneElement, useEffect, useState} from 'react';
 
 import {StyleSheet, TextInput, TouchableOpacity} from 'react-native';
@@ -19,7 +19,6 @@ import {
 } from '@starlingtech/element';
 import light from 'vn.starlingTech/theme/color/light';
 import IconHeart from 'assets/icons/IconHeart';
-import {useAppContext} from '@abong.code/context/AppProvider';
 import AppStyles from 'elements/AppStyles';
 import {useKeyboard} from 'app/hook/keyboardHook';
 import IconSend from 'assets/icons/IconSend';
@@ -27,54 +26,57 @@ import BottomSheetContainer from '../Global/BottomSheetContainer';
 import {BottomSheetModalMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
 import {BottomSheetFlatList} from '@gorhom/bottom-sheet';
 import IconAngleRight from 'assets/icons/IconAngleRight';
+import useAuthStore from 'app/store/authStore';
+import DocumentPicker from 'react-native-document-picker';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
-  commentPostId: string;
+  postId: string;
 };
 
-let page = 1;
-export default function ({bottomRef, commentPostId}: Props) {
-  const {user} = useAppContext();
+export default function ({bottomRef, postId}: Props) {
+  const {user} = useAuthStore();
   const {bottom} = useSafeAreaInsets();
-  const [quantityLikes, setQuantityLikes] = useState(0);
+
   const [comment, setComment] = useState('');
-  const [reLoad, setReLoad] = useState(0);
-  const [showActions, setShowActions] = useState(false);
+  const [media, setMedia] = useState<string[]>([]);
+
+  const [quantityLikes, setQuantityLikes] = useState(0);
+  const [reload, setReload] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+
+  const [showActions, setShowActions] = useState(false);
   const [inputHeight, setInputHeight] = useState(40);
 
-  const {data} = useGetComments(
-    commentPostId,
-    page,
-    AppConstant.LIST_SIZE,
-    reLoad,
-  );
+  const {mutate: createCmt} = useCreateComment();
+  const {data} = useGetComments({postId, reload});
+  const {data: post} = useGetPostById(postId);
 
   const {keyboardVisible} = useKeyboard();
 
   useEffect(() => {
-    commentPostId &&
-      getPost(commentPostId).then(res => {
-        setQuantityLikes(res.users_liked.length);
+    if (post) {
+      setQuantityLikes(post.users_liked.length);
 
-        const liked = res.users_liked.some(e => e === user._id);
-        setIsLiked(liked);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commentPostId]);
+      const liked = post.users_liked.some(e => e === user.id);
+      setIsLiked(liked);
+    }
+  }, [post, user.id]);
 
   const handleCreateComment = () => {
-    const params = new FormData();
-    params.append('postId', commentPostId);
-    params.append('text', comment);
-
-    createComment(params)
-      .then(() => {
-        setReLoad(moment().unix());
-        setComment('');
-      })
-      .catch(err => showToastMessageError('Error!', err));
+    createCmt(
+      {author: user.id, text: comment, files: media, postId},
+      {
+        onSuccess: () => {
+          setComment('');
+          setMedia([]);
+          setReload(moment().unix());
+        },
+        onError: () => {
+          showToastMessageError('Đã có lỗi cảy ra!');
+        },
+      },
+    );
   };
 
   const handleLike = () => {
@@ -84,7 +86,27 @@ export default function ({bottomRef, commentPostId}: Props) {
     } else {
       setQuantityLikes(quantityLikes - 1);
     }
-    likeOrDislikePost(commentPostId);
+    likeOrDislikePost(postId, user.id);
+  };
+
+  const handleSelectFile = async () => {
+    try {
+      const results = await DocumentPicker.pickMultiple({
+        allowMultiSelection: true,
+        type: [DocumentPicker.types.video, DocumentPicker.types.images],
+      });
+      const tmp: string[] = [];
+      results.forEach(result => {
+        tmp.push(result.uri);
+      });
+
+      setMedia(tmp);
+    } catch (error) {
+      if (DocumentPicker.isCancel(error)) {
+      } else {
+        throw error;
+      }
+    }
   };
 
   const renderItem = ({item}: {item: Comment}) => {
@@ -137,22 +159,24 @@ export default function ({bottomRef, commentPostId}: Props) {
       </AppBlock>
 
       {showActions && (
-        <AppBlock
-          row
-          alignItems="center"
-          ph={12}
-          style={styles.borderTop}
-          height={40}>
-          <AppTouchableOpacity>
-            <Ionicons name="camera-outline" size={30} />
-          </AppTouchableOpacity>
-          <AppTouchableOpacity mh={10}>
-            <Ionicons name="image-outline" size={30} />
-          </AppTouchableOpacity>
-          <AppTouchableOpacity>
-            <Ionicons name="happy-outline" size={30} />
-          </AppTouchableOpacity>
-        </AppBlock>
+        <>
+          <AppBlock
+            row
+            alignItems="center"
+            ph={12}
+            style={styles.borderTop}
+            height={40}>
+            <AppTouchableOpacity>
+              <Ionicons name="camera-outline" size={30} />
+            </AppTouchableOpacity>
+            <AppTouchableOpacity mh={10} onPress={handleSelectFile}>
+              <Ionicons name="image-outline" size={30} />
+            </AppTouchableOpacity>
+            <AppTouchableOpacity>
+              <Ionicons name="happy-outline" size={30} />
+            </AppTouchableOpacity>
+          </AppBlock>
+        </>
       )}
     </AppBlock>
   );

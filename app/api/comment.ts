@@ -1,46 +1,65 @@
-import Config from 'react-native-config';
 import {Comment} from './comment.type';
-import axios from 'axios';
-import {useQuery} from '@tanstack/react-query';
+import {useMutation, useQuery} from '@tanstack/react-query';
+import firestore from '@react-native-firebase/firestore';
+import {COLLECTION} from 'app/store/globalStore';
 
-const getComments = async (
-  postId: string,
-  page: number,
-  pageSize: number,
-): Promise<Comment[]> => {
-  return await axios
-    .get(`${Config.BASE_URL}/comment/${postId}`, {
-      params: {
-        page,
-        pageSize,
-      },
-    })
-    .then(({data}) => {
-      return data;
-    })
-    .catch(error => {
-      throw new Error(error.message);
-    });
+type GetCommentsParams = {
+  postId: string;
+  reload: number;
 };
 
-export const useGetComments = (
-  postId: string,
-  page: number,
-  pageSize: number,
-  reLoad: number,
-) =>
-  useQuery({
-    queryKey: ['Comments', postId, page, reLoad],
-    queryFn: () => getComments(postId, page, pageSize),
+export const useGetComments = (params: GetCommentsParams) => {
+  return useQuery(['GET_POSTS', params], async (): Promise<Comment[]> => {
+    const comment_doc = firestore()
+      .collection(COLLECTION.POSTS)
+      .doc(params.postId)
+      .collection(COLLECTION.COMMENTS);
+    // .doc();
+    try {
+      const querySnapshot = await comment_doc
+        .orderBy('createdAt', 'desc')
+        .get();
+      const comments: Comment[] = [];
+      querySnapshot.forEach(documentSnapshot => {
+        comments.push(documentSnapshot.data() as Comment);
+      });
+      return comments;
+    } catch (error) {
+      throw error;
+    }
   });
-
-export const createComment = async (params: FormData): Promise<Comment> => {
-  return await axios
-    .post(`${Config.BASE_URL}/comment/`, params)
-    .then(({data}) => {
-      return data;
-    })
-    .catch(error => {
-      throw new Error(error.message);
-    });
 };
+
+type CreateCommentParams = {
+  author: string;
+  files: string[];
+  text: string;
+  postId: string;
+};
+
+export const useCreateComment = () =>
+  useMutation(
+    async (params: CreateCommentParams): Promise<{message: string}> => {
+      const comment_doc = firestore()
+        .collection(COLLECTION.POSTS)
+        .doc(params.postId)
+        .collection(COLLECTION.COMMENTS)
+        .doc();
+
+      try {
+        await comment_doc.set({
+          ...params,
+          id: comment_doc.id,
+          users_liked: [],
+          comments: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        return {
+          message: 'Thành công!',
+        };
+      } catch (error: any) {
+        throw new Error(error);
+      }
+    },
+  );

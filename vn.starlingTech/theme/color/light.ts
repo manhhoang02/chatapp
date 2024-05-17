@@ -1,6 +1,6 @@
 const light = {
-  primary: '#3B21B2',
-  accent: '#6200EE',
+  primary: '#635A8F',
+  accent: '#6D4ACD',
   secondary: '#1EB8FE',
   background: '#f6f6f6',
   text: '#000000',

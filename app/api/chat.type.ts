@@ -2,11 +2,11 @@
 
 export interface ChatProps {
   _id: string;
-  members: Member[];
+  members: string[];
   createdAt: string;
   updatedAt: string;
-  __v: number;
-  lastMessage?: LastMessage;
+  lastMessage?: string;
+  name: string;
 }
 
 export interface Member {

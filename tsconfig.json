@@ -7,7 +7,8 @@
       "app/*": ["app/*"],
       "assets/*": ["assets/*"],
       "@abong.code/*":["abong.code/*"],
-      "@starling/theme": ["vn.starlingTech/theme/theming"]
+      "@starling/theme": ["vn.starlingTech/theme/theming"],
+      "underscore": ["lodash"]
     }
   },
 }

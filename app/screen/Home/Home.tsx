@@ -4,8 +4,6 @@ import AppConstant from '@abong.code/config/AppConstant';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
-import {ActivityIndicator} from 'react-native-paper';
-import color from '@abong.code/theme/color';
 import {useGetPosts} from 'app/api/post';
 import {Post} from 'app/api/post.type';
 import ItemPost from 'app/components/ItemPost';
@@ -23,23 +21,25 @@ import AppContainer from 'app/components/Global/AppContainer';
 import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
 import HomeHeader from './container/Home.Header';
 import {useRefresh} from 'app/hook/useRefresh';
-
-let page = 1;
+import {useHomeStore} from 'app/store/homeStore';
+import useAuthStore from 'app/store/authStore';
 
 export default function () {
-  // const {user} = useAppContext();
+  const user = useAuthStore(s => s.user);
+
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
-  const hasNextPage = useRef(false);
-  const refOnEndReachedCalled = useRef(true);
+
+  const sync = useHomeStore(s => s.sync);
 
   const currentList = useRef<Post[]>([]);
 
   const [posts, setPosts] = useState<Post[]>([]);
 
-  const {data, isSuccess, isError, refetch} = useGetPosts(
-    page,
-    AppConstant.LIST_SIZE,
-  );
+  const {data, isSuccess, isError, refetch} = useGetPosts({
+    reload: sync.post || sync.friend,
+    userId: user.id,
+  });
+
   const onPressNotification = useCallback((params: ParamsStack['ChatView']) => {
     setTimeout(() => {
       navigation.navigate('ChatView', {
@@ -68,31 +68,22 @@ export default function () {
             .then()
             .catch(err => showToastMessageError('Lỗi', err.message));
         })
-        .catch(err => console.log('Error get FcmToken', err.message));
+        .catch(err => {
+          // showToastMessageError('Lỗi', err.message);
+          console.log(err);
+        });
     } else {
       addFcmToken(fcmToken)
         .then(res => consoleLog(res, 'res-api-addFcm'))
-        .catch(err => showToastMessageError('Lỗi', err.message));
+        .catch(err => {
+          // showToastMessageError('Lỗi', err.message);
+          console.log(err);
+        });
     }
   };
 
   const renderItem = ({item}: {item: Post}) => {
     return <ItemPost item={item} />;
-  };
-
-  const onRefreshing = () => {
-    page = 1;
-    onRefresh();
-  };
-
-  const onEndReached = () => {
-    if (!refOnEndReachedCalled.current) {
-      if (hasNextPage.current) {
-        page++;
-        hasNextPage.current = false;
-      }
-      refOnEndReachedCalled.current = true;
-    }
   };
 
   useEffect(() => {
@@ -105,18 +96,10 @@ export default function () {
 
   useEffect(() => {
     if (isSuccess && data) {
-      if (page === 1) {
-        currentList.current = data;
-      } else {
-        currentList.current = [...currentList.current, ...data];
-      }
+      currentList.current = data;
       setPosts(currentList.current);
-      hasNextPage.current = data.length > AppConstant.LIST_SIZE;
-    } else if (isError) {
-      hasNextPage.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, data, isSuccess, isError]);
+  }, [data, isSuccess, isError]);
 
   const {isRefreshing, onRefresh} = useRefresh(refetch);
 
@@ -124,24 +107,13 @@ export default function () {
     <AppContainer>
       <KeyboardAwareFlatList
         refreshing={isRefreshing}
-        onRefresh={onRefreshing}
+        onRefresh={onRefresh}
         data={posts}
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
         ListHeaderComponentStyle={styles.header}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.1}
         ListHeaderComponent={<HomeHeader />}
-        ListFooterComponent={
-          hasNextPage.current ? (
-            <ActivityIndicator color={color.primary} />
-          ) : null
-        }
-        onMomentumScrollBegin={() => {
-          refOnEndReachedCalled.current = false;
-        }}
-        enableResetScrollToCoords={false}
       />
     </AppContainer>
   );

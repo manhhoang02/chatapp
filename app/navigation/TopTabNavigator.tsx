@@ -13,7 +13,6 @@ import Menu from 'app/screen/Menu/Menu';
 import {AppBlock, AppTouchableOpacity} from '@starlingtech/element';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import TopTabBar from './container/TopTabBar';
-import EmptyScreen from 'app/screen/EmptyScreen';
 import color from '@abong.code/theme/color';
 import IconAdd from 'assets/icons/IconAdd';
 import AppStyles from 'elements/AppStyles';

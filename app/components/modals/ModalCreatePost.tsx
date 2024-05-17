@@ -1,47 +1,71 @@
 import React, {useState} from 'react';
-import {appSize} from '@abong.code/config/AppConstant';
-import {Image, Text, TextInput, TouchableOpacity} from 'react-native';
+import AppConstant, {appSize} from '@abong.code/config/AppConstant';
+import {Text, TextInput, TouchableOpacity} from 'react-native';
 import {StyleSheet, View} from 'react-native';
 import Modal from 'react-native-modal';
 import color from '@abong.code/theme/color';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {BlurView} from '@react-native-community/blur';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import DocumentPicker, {
-  DocumentPickerResponse,
-} from 'react-native-document-picker';
-import Video from 'react-native-video';
-import {createPost} from 'app/api/post';
+import DocumentPicker from 'react-native-document-picker';
 import {
   showToastMessageError,
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
+import light from 'vn.starlingTech/theme/color/light';
+import IconAddImage from 'assets/icons/home/IconAddImage';
+import {AppText} from '@starlingtech/element';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import CreatePostMediaField from '../CreatePostMediaField';
+import AppStyles from 'elements/AppStyles';
+import {useHomeStore} from 'app/store/homeStore';
+import {shallow} from 'zustand/shallow';
+import moment from 'moment';
+import useAuthStore from 'app/store/authStore';
+import {useCreatePost} from 'app/api/post';
+import {Post} from 'app/api/post.type';
 
-type Props = {
-  isVisible: boolean;
-  onClose: () => void;
-};
-export default function ({isVisible, onClose}: Props) {
+type Props = {item: Post};
+export default function ({item}: Props) {
+  const user = useAuthStore(s => s.user);
+
   const {top} = useSafeAreaInsets();
-  const [textPost, setTextPost] = useState('');
-  const [files, setFiles] = useState<DocumentPickerResponse[]>([]);
+
+  const [post, dispatchPost, dispatchSync] = useHomeStore(
+    s => [s.post, s.dispatchPost, s.dispatchSync],
+    shallow,
+  );
+
+  const [description, setDescription] = useState(post.data?.description || '');
+
+  const {mutate: createPost} = useCreatePost();
+
+  const onClose = () => dispatchPost({visible: false, media: []});
 
   const handleCreatePost = async () => {
-    try {
-      const params = new FormData();
-      for (let file of files) {
-        params.append('files', file);
-      }
-      params.append('description', textPost);
-      createPost(params)
-        .then(() => {
-          showToastMessageSuccess('Thành công!', 'Đã đăng bài viết mới');
-          setFiles([]);
-          setTextPost('');
+    const files: string[] = [];
+    for (let uri of post.media) {
+      files.push(uri.uri);
+    }
+
+    createPost(
+      {
+        author: user.id,
+        description,
+        files,
+      },
+      {
+        onSuccess: res => {
+          showToastMessageSuccess(res.message);
+          dispatchPost({media: []});
+          dispatchSync({post: moment().unix()});
+          setDescription('');
           onClose();
-        })
-        .catch(err => showToastMessageError('Error!', err.message));
-    } catch (error) {}
+        },
+        onError: () => {
+          showToastMessageError('Thất bại!', 'Đã có lỗi xảy ra');
+        },
+      },
+    );
   };
   const handleSelectFile = async () => {
     try {
@@ -49,153 +73,136 @@ export default function ({isVisible, onClose}: Props) {
         allowMultiSelection: true,
         type: [DocumentPicker.types.video, DocumentPicker.types.images],
       });
-      setFiles(results);
+      dispatchPost({media: results});
     } catch (error) {
       if (DocumentPicker.isCancel(error)) {
-        // Alert.alert('Canceled from MultipleFile picker')
       } else {
-        // Alert.alert('unknown error: ' + JSON.stringify(err))
         throw error;
       }
     }
   };
+
+  const inputHeight = post.media.length > 0 ? 55 : '45%';
+
   return (
     <Modal
-      animationIn={'fadeInUp'}
-      animationOut={'fadeOutDown'}
-      animationInTiming={300}
-      animationOutTiming={300}
-      backdropColor="transparent"
-      isVisible={isVisible}
-      style={[styles.modal, styles.noMargin]}
+      animationIn={'slideInUp'}
+      animationOut={'slideOutDown'}
+      isVisible={post.visible}
+      statusBarTranslucent
+      useNativeDriver
+      hasBackdrop={false}
+      hideModalContentWhileAnimating
+      style={styles.modal}
       onBackdropPress={onClose}>
-      <BlurView
-        style={styles.blur}
-        blurType="xlight"
-        blurAmount={23}
-        overlayColor="transparent">
-        <View style={[styles.container, {paddingTop: top}]}>
+      <View style={[styles.container, {paddingTop: top}]}>
+        <KeyboardAwareScrollView contentContainerStyle={AppStyles.grow}>
           <View style={styles.header}>
             <Ionicons
-              color={color.black}
-              name="close"
+              name="arrow-back-outline"
               size={24}
-              onPress={() => {
-                onClose();
-                setTextPost('');
-                setFiles([]);
-              }}
+              onPress={onClose}
+              color={color.primary}
             />
             <Text style={styles.textTitle}>Tạo bài viết</Text>
+
             <TouchableOpacity
-              style={{
-                backgroundColor:
-                  textPost || files.length > 0 ? color.primary : color.border,
-                paddingHorizontal: appSize(10),
-                paddingVertical: appSize(5),
-                borderRadius: appSize(5),
-              }}
-              disabled={!textPost && files.length === 0}
+              style={[
+                {
+                  backgroundColor:
+                    description || post.media.length > 0
+                      ? color.primary
+                      : light.light_gray,
+                },
+                styles.postBtn,
+              ]}
+              disabled={!description && post.media.length === 0}
               onPress={handleCreatePost}>
               <Text
                 style={[
                   styles.textBtn,
                   {
                     color:
-                      textPost || files.length > 0
+                      description || post.media.length > 0
                         ? color.white
-                        : color.placeholder,
+                        : light.gray,
                   },
                 ]}>
                 Đăng
               </Text>
             </TouchableOpacity>
           </View>
+
           <TextInput
-            value={textPost}
-            onChangeText={setTextPost}
+            value={description}
+            onChangeText={setDescription}
             placeholder="Bạn đang nghĩ gì?"
             placeholderTextColor={color.placeholder}
-            style={{color: color.black}}
+            style={[styles.input, {height: inputHeight}]}
+            textAlignVertical="top"
+            multiline
           />
-          {files.length > 0 && (
-            <View>
-              {files[0].type === 'image/jpeg' ||
-              files[0].type === 'image/png' ? (
-                <Image
-                  source={{uri: files[0].uri}}
-                  style={{
-                    // width: '100%',
-                    height: appSize(200),
-                  }}
-                />
-              ) : (
-                <Video
-                  controls={true}
-                  source={{
-                    uri: files[0].uri,
-                  }}
-                  style={{
-                    width: appSize(300),
-                    height: appSize(150),
-                  }}
-                  resizeMode={'contain'}
-                />
-              )}
-            </View>
-          )}
+
+          <CreatePostMediaField files={post.media} />
+
           <TouchableOpacity
-            style={styles.btnUploadFile}
+            style={[styles.btnUploadFile, styles.borderTop]}
             onPress={handleSelectFile}>
-            <Image
-              source={require('assets/image/image.png')}
-              style={{
-                width: appSize(30),
-                height: appSize(30),
-                marginRight: appSize(10),
-              }}
-              resizeMode={'contain'}
-            />
-            <Text style={{color: color.black}}>Thêm ảnh/video</Text>
+            <IconAddImage />
+            <AppText size={16} ml={12}>
+              Thêm ảnh/video
+            </AppText>
           </TouchableOpacity>
-        </View>
-      </BlurView>
+          <TouchableOpacity style={styles.btnUploadFile}>
+            <Ionicons name="camera-outline" size={26} color={color.primary} />
+            <AppText size={16} ml={12}>
+              Camera
+            </AppText>
+          </TouchableOpacity>
+        </KeyboardAwareScrollView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: '100%',
-    // borderWidth: appSize(1),
-    borderColor: color.black04,
-    borderBottomLeftRadius: appSize(10),
-    borderBottomRightRadius: appSize(10),
-    paddingHorizontal: appSize(16),
+  row1: {
+    width: '100%',
+    flex: 1,
+    height: AppConstant.UI_WIDTH * 0.5,
   },
-  noMargin: {
-    marginHorizontal: 0,
-    marginVertical: 0,
+  input: {
+    color: color.black,
+    fontSize: 24,
+    paddingHorizontal: 12,
+  },
+  postBtn: {
+    paddingHorizontal: appSize(20),
+    paddingVertical: appSize(8),
+    borderRadius: appSize(8),
+  },
+  container: {
+    flexGrow: 1,
+    backgroundColor: color.white,
   },
   modal: {
-    justifyContent: 'flex-start',
-  },
-  blur: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    flex: 1,
+    margin: 0,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: appSize(20),
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: color.primary,
   },
   textTitle: {
+    flex: 1,
     fontWeight: 'bold',
-    fontSize: appSize(18),
-    color: color.black,
+    fontSize: appSize(20),
+    color: color.primary,
+    marginLeft: 12,
   },
   textBtn: {
     fontWeight: 'bold',
@@ -203,6 +210,12 @@ const styles = StyleSheet.create({
   btnUploadFile: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: appSize(100),
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: color.black,
+    padding: 12,
+  },
+  borderTop: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: color.black,
   },
 });

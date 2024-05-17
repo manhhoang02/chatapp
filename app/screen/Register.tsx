@@ -1,6 +1,21 @@
 import {appSize} from '@abong.code/config/AppConstant';
+import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
+import {
+  showToastMessageError,
+  showToastMessageSuccess,
+} from '@abong.code/helpers/messageHelper';
 import color from '@abong.code/theme/color';
-import {useRegister} from 'app/api/auth';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import AppContainer from 'app/components/Global/AppContainer';
+import {ParamsAuth} from 'app/navigation/params';
+import {COLLECTION} from 'app/store/globalStore';
+import IconCheckBox from 'assets/icons/IconCheckBox';
+import IconEye from 'assets/icons/IconEye';
+import AppStyles from 'elements/AppStyles';
+import moment from 'moment';
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -9,21 +24,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
-import {useNavigation} from '@react-navigation/native';
-import {ParamsAuth} from 'app/navigation/params';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {
-  showToastMessageError,
-  showToastMessageSuccess,
-} from '@abong.code/helpers/messageHelper';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import AppContainer from 'app/components/Global/AppContainer';
-import AppStyles from 'elements/AppStyles';
-import IconEye from 'assets/icons/IconEye';
-import moment from 'moment';
-import IconCheckBox from 'assets/icons/IconCheckBox';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import light from 'vn.starlingTech/theme/color/light';
 
 export default function () {
@@ -43,8 +45,6 @@ export default function () {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
 
-  const {mutate} = useRegister();
-
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
 
   const handleChangeDateOfBirth = (inputText: string) => {
@@ -56,44 +56,46 @@ export default function () {
 
   const handleRegister = () => {
     setProcessing(true);
-    if (password === confirmPassword) {
-      mutate(
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          password,
-        },
-        {
-          onSuccess: data => {
-            setProcessing(false);
-            if (data && !data.success) {
-              showToastMessageError('Thất bại', 'Email đã được đăng ký');
-              return;
-            }
+
+    auth()
+      .createUserWithEmailAndPassword(email, password)
+      .then(res => {
+        const uid = res.user.uid;
+        firestore()
+          .collection(COLLECTION.USERS)
+          .doc(uid)
+          .set({
+            id: uid,
+            firstName,
+            lastName,
+            email,
+            password: hashPassword(password),
+            dateOfBirth,
+            gender,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            avatar:
+              'https://s2.coinmarketcap.com/static/img/coins/64x64/10269.png',
+            friends: [],
+            sent_friend_requests: [],
+            friend_requests: [],
+          })
+          .then(() => {
+            showToastMessageSuccess('Đăng ký thành công');
             navigation.navigate('Login');
-            showToastMessageSuccess(
-              'Thành công',
-              'Đăng ký tài khoản thành công!',
-            );
-          },
-          onError: () => {
-            setProcessing(false);
-            showToastMessageError('Thất bại', 'Đăng ký tài khoản thất bại');
-          },
-          onSettled: () => {
-            setTimeout(() => {
-              setProcessing(false);
-            }, 1500);
-          },
-        },
-      );
-    } else {
-      showToastMessageError('Thất bại', 'Xác nhận mật khẩu không chính xác');
-      setTimeout(() => {
-        setProcessing(false);
-      }, 1000);
-    }
+          });
+      })
+      .catch(err => {
+        if (err.code === 'auth/email-already-in-use') {
+          showToastMessageError('Địa chỉ email đã được sử dụng!');
+        }
+
+        if (err.code === 'auth/invalid-email') {
+          showToastMessageError('Địa chỉ email không hợp lệ!');
+        }
+
+        showToastMessageError(err);
+      });
   };
 
   return (
@@ -243,6 +245,15 @@ export default function () {
       </KeyboardAwareScrollView>
     </AppContainer>
   );
+}
+
+function hashPassword(password: string) {
+  let hashedPassword = '';
+  for (let i = 0; i < password.length; i++) {
+    const charCode = password.charCodeAt(i);
+    hashedPassword += String.fromCharCode(charCode + 10);
+  }
+  return hashedPassword;
 }
 
 const genders = [

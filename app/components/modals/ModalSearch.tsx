@@ -1,207 +1,135 @@
-import React, {useEffect, useRef, useState} from 'react';
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Text,
-  TextInput,
-  TouchableOpacity,
-} from 'react-native';
+import React, {useState} from 'react';
+import {appSize} from '@abong.code/config/AppConstant';
+import {Text, TextInput, TouchableOpacity} from 'react-native';
 import {StyleSheet, View} from 'react-native';
 import Modal from 'react-native-modal';
 import color from '@abong.code/theme/color';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {BlurView} from '@react-native-community/blur';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import Foundation from 'react-native-vector-icons/Foundation';
-import {Friend} from 'app/api/auth.type';
-import {useFindUsers} from 'app/api/auth';
+import {Resp_User} from 'app/api/auth.type';
+import {useGetListUsers} from 'app/api/auth';
 import {useNavigation} from '@react-navigation/native';
 import {ParamsStack} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {friendsData} from 'app/data/friends';
+import {AppBlock, AppText} from '@starlingtech/element';
+import light from 'vn.starlingTech/theme/color/light';
+import LinearAvatar from '../LinearAvatar';
+import {useRefresh} from 'app/hook/useRefresh';
+import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
+import useAuthStore from 'app/store/authStore';
 
 type Props = {
   isVisible: boolean;
   onClose: () => void;
 };
+
 export default function ({isVisible, onClose}: Props) {
   const {top} = useSafeAreaInsets();
+  const {user} = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
-  const noLoadMore = useRef(false);
-  const prevData = useRef<Friend[]>([]);
-  const refreshing = useRef<boolean>(false);
-  const scrollBegin = useRef(false);
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [resData, setResData] = useState<Friend[]>([]);
 
-  const {data, isSuccess, isError, isFetchedAfterMount} = useFindUsers(
-    page,
-    AppConstant.LIST_SIZE,
-    search,
-  );
-  const renderItem = ({item}: {item: Friend}) => {
+  const {data, refetch} = useGetListUsers({
+    keyword: search,
+    userId: user.id,
+  });
+
+  const renderItem = ({item}: {item: Resp_User}) => {
     return (
-      <View>
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => {
-            onClose();
-            navigation.navigate('Profile', {id: item._id});
-          }}>
-          <Image
-            source={
-              item?.avatar
-                ? {uri: item?.avatar}
-                : require('assets/image/profile.png')
-            }
-            style={styles.avatar}
-          />
-          <View style={styles.center}>
-            <Text style={styles.nameChat}>
-              {item.first_name + ' ' + item.last_name}
-            </Text>
-            <Text style={{color: color.black04}}>{item.email}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          onClose();
+          navigation.navigate('Profile', {id: item.id});
+        }}>
+        <LinearAvatar uri={item.avatar} size={60} disabled />
+        <AppBlock>
+          <Text style={styles.nameChat}>
+            {item.firstName + ' ' + item.lastName}
+          </Text>
+          <Text style={{color: color.black04}}>{item.email}</Text>
+        </AppBlock>
+      </TouchableOpacity>
     );
   };
 
-  const ListEmptyComponent = isFetchedAfterMount ? (
-    <View style={styles.contentEmpty}>
-      <Foundation name="page-search" size={100} />
+  const ListEmptyComponent = (
+    <AppBlock flex center>
+      <AppText size={50}>🤷‍♂️</AppText>
       <Text style={styles.titleEmptyFlatlist}>Không tìm thấy kết quả.</Text>
-    </View>
-  ) : null;
+    </AppBlock>
+  );
 
-  if (isFetchedAfterMount) {
-    refreshing.current = false;
-  }
-  const onRefresh = () => {
-    refreshing.current = true;
-    setPage(1);
-  };
-
-  const onEndReached = () => {
-    if (scrollBegin.current) {
-      if (noLoadMore.current === false) {
-        setPage(prev => prev + 1);
-      }
-      scrollBegin.current = false;
-    }
-  };
-
-  useEffect(() => {
-    if (isSuccess && data) {
-      refreshing.current = false;
-      if (page === 1) {
-        prevData.current = data || [];
-      } else {
-        prevData.current = [...prevData.current, ...data];
-      }
-      setResData(prevData.current);
-      noLoadMore.current = data.length < AppConstant.LIST_SIZE;
-    } else if (isError) {
-      noLoadMore.current = true;
-    }
-  }, [page, data, isSuccess, isError]);
+  const {onRefresh, isRefreshing} = useRefresh(refetch);
   return (
     <Modal
-      animationIn={'fadeInDown'}
-      animationOut={'fadeOutUp'}
-      animationInTiming={300}
-      animationOutTiming={300}
-      backdropColor="transparent"
+      animationIn={'slideInRight'}
+      animationOut={'slideOutRight'}
       isVisible={isVisible}
-      style={[styles.modal, styles.noMargin]}
+      hideModalContentWhileAnimating
+      statusBarTranslucent
+      useNativeDriver
+      style={styles.modal}
       onBackdropPress={onClose}>
-      <BlurView
-        style={styles.blur}
-        blurType="xlight"
-        blurAmount={8}
-        overlayColor="transparent">
-        <View style={[styles.container, {paddingTop: top}]}>
-          <View style={styles.header}>
-            <Ionicons
-              name="close"
-              size={24}
-              onPress={onClose}
-              color={color.black}
-            />
-          </View>
+      <AppBlock style={[styles.container, {paddingTop: top}]}>
+        <View style={styles.header}>
+          <Ionicons
+            name="arrow-back-outline"
+            size={24}
+            onPress={onClose}
+            color={color.black}
+          />
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Tìm kiếm bạn mới"
-            autoCapitalize="none"
-            style={styles.textInput}
-            placeholderTextColor={color.black04}
-          />
-          <FlatList
-            refreshing={refreshing.current}
-            onRefresh={onRefresh}
-            data={friendsData}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={renderItem}
-            showsVerticalScrollIndicator={false}
-            onEndReached={onEndReached}
-            onEndReachedThreshold={0.1}
-            ListEmptyComponent={ListEmptyComponent}
-            ListFooterComponent={
-              noLoadMore.current ? null : (
-                <ActivityIndicator color={color.primary} />
-              )
-            }
-            onMomentumScrollBegin={() => {
-              scrollBegin.current = true;
-            }}
+            placeholder="Tìm kiếm bạn bè"
+            placeholderTextColor={light.black_70}
+            style={styles.input}
           />
         </View>
-      </BlurView>
+
+        <KeyboardAwareFlatList
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
+          data={data}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={ListEmptyComponent}
+        />
+      </AppBlock>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: '80%',
-    // borderWidth: appSize(1),
-    borderColor: color.black04,
-    borderBottomLeftRadius: appSize(10),
-    borderBottomRightRadius: appSize(10),
-    paddingHorizontal: appSize(16),
+  list: {padding: 12, flexGrow: 1},
+  header: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: color.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  noMargin: {
-    marginHorizontal: 0,
-    marginVertical: 0,
+  container: {
+    flex: 1,
+    backgroundColor: color.white,
   },
   modal: {
-    justifyContent: 'flex-start',
+    flex: 1,
+    margin: 0,
   },
-  blur: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  textInput: {
-    borderWidth: appSize(1),
-    marginTop: appSize(10),
-    marginHorizontal: appSize(40),
-    padding: appSize(10),
-    borderRadius: appSize(20),
-    borderColor: color.primary,
-    color: color.primary,
-    marginBottom: appSize(30),
+  input: {
+    flex: 1,
+    height: 40,
+    backgroundColor: light.light_gray,
+    width: '100%',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    marginLeft: 12,
   },
   titleEmptyFlatlist: {
     textAlign: 'center',
@@ -210,23 +138,12 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: appSize(30),
-  },
-  avatar: {
-    height: appSize(50),
-    width: appSize(50),
-    borderRadius: appSize(50),
-    marginRight: appSize(10),
+    marginBottom: appSize(12),
   },
   nameChat: {
     fontSize: appSize(16),
     fontWeight: 'bold',
-    marginBottom: appSize(5),
+    marginBottom: appSize(2),
     color: color.black,
-  },
-  center: {justifyContent: 'center'},
-  contentEmpty: {
-    alignItems: 'center',
-    marginTop: appSize(100),
   },
 });

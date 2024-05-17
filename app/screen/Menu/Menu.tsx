@@ -1,5 +1,4 @@
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
-import {UserProfileType, useAppContext} from '@abong.code/context/AppProvider';
+import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -12,15 +11,14 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearAvatar from 'app/components/LinearAvatar';
 import light from 'vn.starlingTech/theme/color/light';
 import {AppText} from '@starlingtech/element';
-import auth from '@react-native-firebase/auth';
-import {logout} from 'app/api/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useAuthStore from 'app/store/authStore';
+import {shallow} from 'zustand/shallow';
 
 export default function () {
   const navigation =
     useNavigation<NativeStackNavigationProp<ParamsStack, 'TabScreen'>>();
-  const {user, setUser} = useAppContext();
   const {bottom} = useSafeAreaInsets();
+  const [user, signOut] = useAuthStore(s => [s.user, s.signOut], shallow);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -34,19 +32,7 @@ export default function () {
         },
         {
           text: 'Đăng xuất',
-          onPress: async () => {
-            auth().signOut();
-            // .then(() => consoleLog(auth().currentUser, 'hihi-logout'));
-
-            const fcmToken = await AsyncStorage.getItem(
-              AppConstant.SESSION.FCM_TOKEN,
-            );
-            if (fcmToken) {
-              await logout(fcmToken);
-            }
-            AsyncStorage.removeItem(AppConstant.SESSION.TOKEN);
-            setUser({} as UserProfileType);
-          },
+          onPress: () => signOut(),
         },
       ],
       {cancelable: false},
@@ -61,12 +47,12 @@ export default function () {
           <TouchableOpacity
             style={styles.btnInfor}
             onPress={() => {
-              navigation.navigate('Profile', {id: user._id});
+              navigation.navigate('Profile', {id: user.id});
             }}>
             <LinearAvatar uri={user.avatar} size={56} disabled />
             <View style={styles.contentName}>
               <Text style={styles.textName}>
-                {user.first_name + ' ' + user.last_name}
+                {user.firstName + ' ' + user.lastName}
               </Text>
               <Text
                 style={{

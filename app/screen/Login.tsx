@@ -1,6 +1,5 @@
-import {useAppContext} from '@abong.code/context/AppProvider';
 import color from '@abong.code/theme/color';
-import {getProfileMe, useLogin, useLoginSocial} from 'app/api/auth';
+import {getUserById, useLoginSocial} from 'app/api/auth';
 import React, {useEffect, useState} from 'react';
 import {
   Image,
@@ -12,7 +11,6 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
-import {initApiHeader} from '@abong.code/api/AppNetworking';
 import {useNavigation} from '@react-navigation/native';
 import {ParamsAuth} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -21,7 +19,7 @@ import auth from '@react-native-firebase/auth';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {consoleLog} from '@abong.code/helpers/logHelper';
+import {consoleLog, consolelog} from '@abong.code/helpers/logHelper';
 import AppContainer from 'app/components/Global/AppContainer';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import AppStyles from 'elements/AppStyles';
@@ -32,11 +30,16 @@ import IconEye from 'assets/icons/IconEye';
 import IconCheckBox from 'assets/icons/IconCheckBox';
 import IconGoogle from 'assets/icons/IconGoogle';
 import light from 'vn.starlingTech/theme/color/light';
+import useAuthStore from 'app/store/authStore';
+import {shallow} from 'zustand/shallow';
 
 export default function () {
   const insets = useSafeAreaInsets();
+  const [user, dispatchUser] = useAuthStore(
+    s => [s.user, s.dispatchUser],
+    shallow,
+  );
 
-  const {setUser} = useAppContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(true);
@@ -44,7 +47,6 @@ export default function () {
   const [rememberMe, setRememberMe] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
-  const {mutate} = useLogin();
   const {mutate: loginSocial} = useLoginSocial();
 
   const handleLoginFacebook = async () => {
@@ -84,9 +86,8 @@ export default function () {
         },
         {
           onSuccess: resLogin => {
-            initApiHeader(resLogin.token);
-            getProfileMe().then(dataUser => {
-              setUser({...dataUser, token: resLogin.token});
+            getUserById(user.id).then(resUser => {
+              dispatchUser({...user, ...resUser});
             });
             AsyncStorage.setItem(AppConstant.SESSION.TOKEN, resLogin.token);
           },
@@ -119,9 +120,8 @@ export default function () {
         },
         {
           onSuccess: resLogin => {
-            initApiHeader(resLogin.token);
-            getProfileMe().then(dataUser => {
-              setUser({...dataUser, token: resLogin.token});
+            getUserById(user.id).then(resUser => {
+              dispatchUser({...user, ...resUser});
             });
             AsyncStorage.setItem(AppConstant.SESSION.TOKEN, resLogin.token);
           },
@@ -131,30 +131,41 @@ export default function () {
       showToastMessageError('Thất bại!', 'Hãy kiểm tra lại kết nối!');
     }
   };
+
   const handleLogin = () => {
-    if (email && password) {
-      setProcessing(true);
-      mutate(
-        {email, password},
-        {
-          onSuccess: res => {
-            initApiHeader(res.token);
-            getProfileMe().then(data => {
-              setUser({...data, token: res.token});
+    setProcessing(true);
+    auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(async res => {
+        const uid = res.user.uid;
+        if (uid) {
+          const resUser = await getUserById(uid);
+          if (resUser) {
+            dispatchUser({
+              ...resUser,
             });
-            AsyncStorage.setItem(AppConstant.SESSION.TOKEN, res.token);
-          },
-          onError: () => {
-            showToastMessageError('Thất bại', 'Sai tài khoản hoặc mật khẩu');
-          },
-          onSettled: () => {
-            setTimeout(() => {
-              setProcessing(false);
-            }, 1500);
-          },
-        },
-      );
-    }
+            AsyncStorage.setItem('id', resUser.id);
+          }
+        }
+        consolelog(res);
+        setProcessing(false);
+      })
+      .catch(err => {
+        setProcessing(false);
+
+        if (err.code === 'auth/invalid-email') {
+          showToastMessageError('Địa chỉ email không hợp lệ!');
+        }
+        if (err.code === 'auth/wrong-password') {
+          showToastMessageError('Sai mật khẩu!');
+        }
+        if (err.code === 'auth/user-not-found') {
+          showToastMessageError('Không tìm thấy người dùng!');
+        }
+
+        showToastMessageError('Thất bại', 'Sai tài khoản hoặc mật khẩu');
+        console.error(err);
+      });
   };
 
   const handleRememberMe = async () => {
@@ -188,7 +199,7 @@ export default function () {
   useEffect(() => {
     GoogleSignin.configure({
       webClientId:
-        '328214108378-d28hjog5jn8dats7t0djagcnmjbr7ioh.apps.googleusercontent.com',
+        '967140539717-7q3b9isgbbmkbt3af9970tm4s7srtomk.apps.googleusercontent.com',
     });
   }, []);
   return (
