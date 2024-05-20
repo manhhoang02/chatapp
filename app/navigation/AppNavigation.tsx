@@ -12,9 +12,13 @@ import {NavigationContainer} from '@react-navigation/native';
 import ModalCallVideo from 'app/components/modals/ModalCallVideo';
 import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
+import {ChatProvider} from 'app/components/chat/ChatContext';
+import {useChatClient} from 'app/hook/useChatClient';
 
 export default function () {
   const {socket, showModalCallVideo, setShowModalCallVideo} = useAppContext();
+
+  useChatClient();
 
   const [user, dispatchUser] = useAuthStore(
     s => [s.user, s.dispatchUser],
@@ -70,33 +74,35 @@ export default function () {
   }
 
   return (
-    <NavigationContainer>
-      {user.id ? <MainNavigator /> : <AuthNavigator />}
-      {dataCall ? (
-        dataCall.friendId === user.id ? (
-          <ModalCallVideo
-            callerId={dataCall.userId}
-            calleeId={dataCall.friendId}
-            name={dataCall.nameCaller}
-            avatar={dataCall.avatarCaller}
-            isVisible={showModalCallVideo}
-            onClose={() => setShowModalCallVideo(false)}
-          />
-        ) : null
-      ) : null}
-      {dataCall ? (
-        dataCall.friendId !== user.id ? (
-          <ModalCallVideo
-            callerId={dataCall.userId}
-            calleeId={dataCall.friendId}
-            name={dataCall.nameCallee}
-            avatar={dataCall.avatarCallee}
-            isVisible={showModalCallVideo}
-            onClose={() => setShowModalCallVideo(false)}
-          />
-        ) : null
-      ) : null}
-    </NavigationContainer>
+    <ChatProvider>
+      <NavigationContainer>
+        {user.id ? <MainNavigator /> : <AuthNavigator />}
+        {dataCall ? (
+          dataCall.friendId === user.id ? (
+            <ModalCallVideo
+              callerId={dataCall.userId}
+              calleeId={dataCall.friendId}
+              name={dataCall.nameCaller}
+              avatar={dataCall.avatarCaller}
+              isVisible={showModalCallVideo}
+              onClose={() => setShowModalCallVideo(false)}
+            />
+          ) : null
+        ) : null}
+        {dataCall ? (
+          dataCall.friendId !== user.id ? (
+            <ModalCallVideo
+              callerId={dataCall.userId}
+              calleeId={dataCall.friendId}
+              name={dataCall.nameCallee}
+              avatar={dataCall.avatarCallee}
+              isVisible={showModalCallVideo}
+              onClose={() => setShowModalCallVideo(false)}
+            />
+          ) : null
+        ) : null}
+      </NavigationContainer>
+    </ChatProvider>
   );
 }
 

@@ -28,6 +28,7 @@ export type ParamsStack = {
   Profile: {id: string};
   FriendRequests: undefined;
   EmptyScreen1: undefined;
+  ChannelScreen: undefined;
 };
 export type ParamsAuth = {
   SplashScreen: undefined;

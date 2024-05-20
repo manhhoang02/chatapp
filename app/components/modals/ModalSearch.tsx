@@ -12,7 +12,7 @@ import {useNavigation} from '@react-navigation/native';
 import {ParamsStack} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {AppBlock, AppText} from '@starlingtech/element';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import LinearAvatar from '../LinearAvatar';
 import {useRefresh} from 'app/hook/useRefresh';
 import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';

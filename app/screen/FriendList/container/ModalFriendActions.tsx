@@ -13,7 +13,7 @@ import LinearAvatar from 'app/components/LinearAvatar';
 import color from '@abong.code/theme/color';
 import AppStyles from 'elements/AppStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
