@@ -6,7 +6,7 @@ import {AppBlock, AppTouchableOpacity} from '@starlingtech/element';
 import color from '@abong.code/theme/color';
 import AppStyles from 'elements/AppStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import {useDeletePost} from 'app/api/post';
 import {showToastMessageSuccess} from '@abong.code/helpers/messageHelper';
 import {useHomeStore} from 'app/store/homeStore';

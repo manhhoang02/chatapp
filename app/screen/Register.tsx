@@ -26,7 +26,7 @@ import {
 } from 'react-native';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 
 export default function () {
   const insets = useSafeAreaInsets();

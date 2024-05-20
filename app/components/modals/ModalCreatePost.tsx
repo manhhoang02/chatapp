@@ -11,7 +11,7 @@ import {
   showToastMessageError,
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import IconAddImage from 'assets/icons/home/IconAddImage';
 import {AppText} from '@starlingtech/element';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';

@@ -5,7 +5,7 @@ import moment from 'moment';
 import React, {ReactNode, useState} from 'react';
 import {Alert, Pressable, StyleSheet, Text} from 'react-native';
 import LinearAvatar from './LinearAvatar';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useGetUserById} from 'app/api/auth';
 

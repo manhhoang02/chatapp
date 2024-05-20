@@ -29,7 +29,7 @@ import AppConstant, {appSize} from '@abong.code/config/AppConstant';
 import IconEye from 'assets/icons/IconEye';
 import IconCheckBox from 'assets/icons/IconCheckBox';
 import IconGoogle from 'assets/icons/IconGoogle';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
 

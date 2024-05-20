@@ -1,14 +1,14 @@
 {
   "extends": "@tsconfig/react-native/tsconfig.json",
   "compilerOptions": {
-    "skipLibCheck": true,                     /* Skip type checking of declaration files. */
+    "skipLibCheck": true /* Skip type checking of declaration files. */,
     "baseUrl": ".",
     "paths": {
       "app/*": ["app/*"],
       "assets/*": ["assets/*"],
-      "@abong.code/*":["abong.code/*"],
-      "@starling/theme": ["vn.starlingTech/theme/theming"],
+      "@abong.code/*": ["abong.code/*"],
+      "@starling/theme": ["starling/theme/theming"],
       "underscore": ["lodash"]
     }
-  },
+  }
 }
