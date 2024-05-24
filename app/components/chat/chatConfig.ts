@@ -1,3 +1,3 @@
-const chatApiKey = '5qf2kr9mmqnu';
+const chatApiKey = 'a66ztdjp8zy5';
 
 export {chatApiKey};

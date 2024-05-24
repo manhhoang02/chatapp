@@ -1,14 +1,4 @@
-import {ResUser} from 'app/api/auth.type';
-import initSocket from 'app/utils/socketService';
-import React, {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
-import {Socket} from 'socket.io-client';
+import React, {createContext, useContext} from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import Toast, {
@@ -22,56 +12,17 @@ import AppStyles from 'elements/AppStyles';
 
 const queryClient = new QueryClient();
 
-export interface UserProfileType extends ResUser {
-  token: string;
-}
-export type SyncDataType = {
-  chats: number;
-  friends: number;
-};
-type AppContextType = {
-  user: UserProfileType;
-  setUser: Dispatch<SetStateAction<UserProfileType>>;
-  socket: Socket;
-  syncData: SyncDataType;
-  dispatchSyncData: (p: SyncDataType) => void;
-  showModalCallVideo: boolean;
-  setShowModalCallVideo: Dispatch<SetStateAction<boolean>>;
-};
+type AppContextType = {};
 const AppContext = createContext({} as AppContextType);
 
 export const useAppContext = () => useContext(AppContext);
 
-const socket = initSocket();
-
 const AppProvider = ({children}: any) => {
-  const [user, setUser] = useState<UserProfileType>({} as UserProfileType);
-  const [showModalCallVideo, setShowModalCallVideo] = useState(false);
-  const [syncData, dispatchSyncData] = useState<SyncDataType>(
-    {} as SyncDataType,
-  );
-  useEffect(() => {
-    if (user._id) {
-      socket.emit('setup', user);
-    }
-  }, [user]);
-
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={AppStyles.fill}>
         <QueryClientProvider client={queryClient}>
-          <AppContext.Provider
-            value={{
-              socket,
-              user,
-              setUser,
-              syncData,
-              dispatchSyncData,
-              showModalCallVideo,
-              setShowModalCallVideo,
-            }}>
-            {children}
-          </AppContext.Provider>
+          <AppContext.Provider value={{}}>{children}</AppContext.Provider>
         </QueryClientProvider>
         <Toast config={toastConfig} />
       </GestureHandlerRootView>

@@ -61,6 +61,11 @@ export default function () {
       .createUserWithEmailAndPassword(email, password)
       .then(res => {
         const uid = res.user.uid;
+        // const avt = `https://getstream.io/random_png/?id=${uid}&name=${firstName}+${lastName}`;
+        const avt =
+          gender === 'male'
+            ? 'https://avatar.iran.liara.run/public/boy'
+            : 'https://avatar.iran.liara.run/public/girl';
         firestore()
           .collection(COLLECTION.USERS)
           .doc(uid)
@@ -74,14 +79,14 @@ export default function () {
             gender,
             createdAt: new Date(),
             updatedAt: new Date(),
-            avatar:
-              'https://s2.coinmarketcap.com/static/img/coins/64x64/10269.png',
+            avatar: avt,
             friends: [],
             sent_friend_requests: [],
             friend_requests: [],
           })
           .then(() => {
             showToastMessageSuccess('Đăng ký thành công');
+
             navigation.navigate('Login');
           });
       })

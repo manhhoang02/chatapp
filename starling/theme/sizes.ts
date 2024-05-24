@@ -20,4 +20,4 @@ export const sizes = {
   inputRadius: 9,
   inputMaxWidth: 600,
   inputHorizontalPadding: 12,
-}
+};

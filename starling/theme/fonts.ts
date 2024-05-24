@@ -8,4 +8,4 @@ export const fonts = {
   light: 'Roboto-Light',
   extraLight: 'Roboto-ExtraLight',
   thin: 'Roboto-Thin',
-}
+};

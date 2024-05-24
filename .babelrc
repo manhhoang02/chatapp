@@ -8,7 +8,7 @@
         "alias": {
           "app": "./app",
           "assets": "./assets",
-          "@abong.code":"./abong.code",
+          "@abong.code": "./abong.code",
           "@starling/theme": "./starling/theme/theming"
         },
         "extensions": [

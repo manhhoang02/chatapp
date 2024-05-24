@@ -8,18 +8,13 @@ import {ParamsTopTab} from './params';
 import {Host} from 'react-native-portalize';
 import Home from 'app/screen/Home/Home';
 import FriendList from 'app/screen/FriendList/FriendList';
-import Chats from 'app/screen/Chat/Chats';
 import Menu from 'app/screen/Menu/Menu';
-import {AppBlock, AppTouchableOpacity} from '@starlingtech/element';
+import {AppBlock} from '@starlingtech/element';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import TopTabBar from './container/TopTabBar';
-import color from '@abong.code/theme/color';
-import IconAdd from 'assets/icons/IconAdd';
 import AppStyles from 'elements/AppStyles';
-import IconSearch from 'assets/icons/IconSearch';
 import Notifications from 'app/screen/Notifications';
-import {ChatScreen} from 'app/screen/ChatScreen';
-import { ChannelListScreen } from 'app/screen/ChannelListScreen';
+import {ChannelListScreen} from 'app/screen/Chat/ChannelListScreen';
 
 const TopTab = createMaterialTopTabNavigator<ParamsTopTab>();
 
@@ -48,14 +43,14 @@ export function TopTabNavigator() {
           resizeMode="contain"
         />
 
-        <AppBlock row>
+        {/* <AppBlock row>
           <AppTouchableOpacity>
             <IconAdd width={24} color={color.primary} />
           </AppTouchableOpacity>
           <AppTouchableOpacity ml={20}>
             <IconSearch width={24} color={color.primary} />
           </AppTouchableOpacity>
-        </AppBlock>
+        </AppBlock> */}
       </AppBlock>
       <TopTab.Navigator tabBar={tabBar}>
         <TopTab.Screen name="Tab1" component={Home} />

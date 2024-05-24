@@ -20,18 +20,14 @@ export const useChatClient = () => {
         chatClient.devToken(currentUser.id),
       );
       setClientIsReady(true);
-      // if (!chatClient.userID) {
-      //   await chatClient.connectUser(user, chatUserToken);
-      //   setClientIsReady(true);
-      // } else {
-      //   await chatClient.disconnectUser();
-      // }
     };
 
-    if (currentUser.id) {
+    if (!chatClient.userID && currentUser.id) {
       setupClient();
     }
   }, [currentUser.firstName, currentUser.id, currentUser.lastName]);
 
   return {clientIsReady};
 };
+
+export const disconnectChatUser = async () => chatClient.disconnectUser();

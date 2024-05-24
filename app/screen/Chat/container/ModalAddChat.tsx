@@ -1,138 +1,159 @@
-import {Alert, FlatList, StyleSheet} from 'react-native';
+import {FlatList, StyleSheet, Text, TextInput, View} from 'react-native';
 import React, {useState} from 'react';
-import {AppBlock, AppText, AppTouchableOpacity} from '@starlingtech/element';
-import ReactNativeModal from 'react-native-modal';
-import {TextInput} from 'react-native-paper';
-import {useGetListUsers} from 'app/api/auth';
-import LinearAvatar from 'app/components/LinearAvatar';
-import IconCheckBox from 'assets/icons/IconCheckBox';
-import AppStyles from 'elements/AppStyles';
-import {useCreateChat} from 'app/api/chat';
 import {
-  showToastMessageError,
-  showToastMessageSuccess,
-} from '@abong.code/helpers/messageHelper';
-import {useHomeStore} from 'app/store/homeStore';
-import moment from 'moment';
+  AppBlock,
+  AppText,
+  AppTouchableOpacity,
+  appSize,
+} from '@starlingtech/element';
+import ReactNativeModal from 'react-native-modal';
+import {getUserById, useGetListUsers} from 'app/api/auth';
+import LinearAvatar from 'app/components/LinearAvatar';
+import AppStyles from 'elements/AppStyles';
+import {chatClient} from 'app/hook/useChatClient';
+import {useChatContext} from 'app/components/chat/ChatContext';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import color from '@abong.code/theme/color';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import useAuthStore from 'app/store/authStore';
+import ModalAddGroupChat from './ModalAddGroupChat';
 
 interface Props {
   isVisible: boolean;
   onClose: () => void;
+  navigation: any;
 }
 
-export default function ModalAddChat({isVisible, onClose}: Props) {
-  const dispatch = useHomeStore(s => s.dispatchSync);
+export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
+  const {top, bottom} = useSafeAreaInsets();
+  const userId = useAuthStore(s => s.user.id);
+  const {setChannel} = useChatContext();
 
-  const {data} = useGetListUsers({userId: ''});
-  const {mutate} = useCreateChat();
+  const {data} = useGetListUsers({userId});
 
-  const [name, setName] = useState('');
-  const [ids, setIds] = useState<string[]>([]);
+  const [keyword, setKeyword] = useState('');
 
-  const onCreateChat = () => {
-    if (!name) {
-      Alert.alert('Vui lòng nhập tên đoạn chat');
-      return;
-    }
+  const [showAddGroup, setShowAddGroup] = useState(false);
 
-    if (ids.length < 2) {
-      Alert.alert('Vui lòng chọn ít nhất 2 thành viên');
-      return;
-    }
-    mutate(
-      {name, members: ids},
-      {
-        onSuccess: () => {
-          showToastMessageSuccess('Tạo đoạn chat thành công');
-          dispatch({chat: moment().unix()});
-          onClose();
-        },
-        onError: () => {
-          showToastMessageError('Tạo đoạn chat thất bại');
-        },
-      },
-    );
+  const onItemPress = async (id: string) => {
+    const friend = await getUserById(id);
+
+    const channel = chatClient.channel('messaging', {
+      members: [userId, id],
+      name: friend.firstName + ' ' + friend.lastName,
+    });
+    setChannel(channel);
+    onClose();
+    navigation.navigate('ChannelScreen');
   };
 
-  const onItemPress = (id: string) => {
-    if (ids.includes(id)) {
-      setIds(ids.filter(e => e !== id));
-    } else {
-      setIds([...ids, id]);
-    }
-  };
+  const filterData = data
+    ? data.filter(item => {
+        const name = item.firstName + ' ' + item.lastName;
+        if (name.toLowerCase().includes(keyword.toLowerCase())) {
+          return item;
+        }
+      })
+    : [];
   return (
-    <ReactNativeModal
-      animationIn={'fadeIn'}
-      animationOut={'fadeOut'}
-      isVisible={isVisible}
-      statusBarTranslucent
-      useNativeDriver
-      onBackdropPress={onClose}
-      style={styles.modal}>
-      <AppBlock
-        background="white"
-        style={{
-          width: '95%',
-          height: 500,
-          paddingVertical: 10,
-          paddingHorizontal: 12,
-        }}>
-        <AppText size={30} color="primary" mb={10}>
-          Tạo đoạn chat
-        </AppText>
+    <>
+      <ReactNativeModal
+        animationIn={'slideInRight'}
+        animationOut={'slideOutRight'}
+        isVisible={isVisible}
+        statusBarTranslucent
+        hasBackdrop={false}
+        useNativeDriver
+        style={styles.modal}>
+        <View
+          style={[styles.container, {paddingBottom: bottom, paddingTop: top}]}>
+          <AppBlock mb={12} style={styles.header}>
+            <Ionicons
+              name="arrow-back-outline"
+              size={24}
+              onPress={onClose}
+              color={color.primary}
+            />
+            <Text style={styles.textTitle}>Tin nhắn mới</Text>
 
-        <TextInput
-          mode="outlined"
-          label={'Tên đoạn chat'}
-          value={name}
-          onChangeText={setName}
-        />
+            <AppTouchableOpacity onPress={() => setShowAddGroup(true)}>
+              <AppText weight="700" color="primary">
+                Tạo nhóm
+              </AppText>
+            </AppTouchableOpacity>
+          </AppBlock>
 
-        <AppText size={20} mt={16}>
-          Thêm thành viên
-        </AppText>
+          <AppBlock flex ph={12}>
+            <AppBlock row alignItems="center" border={[0, 0, 1]}>
+              <AppText style={{color: color.black04}} weight="500" size={20}>
+                Đến:
+              </AppText>
+              <TextInput
+                placeholder="....."
+                style={styles.input}
+                value={keyword}
+                onChangeText={setKeyword}
+              />
+            </AppBlock>
 
-        <FlatList
-          data={data}
-          contentContainerStyle={{flexGrow: 1, alignItems: 'flex-start'}}
-          renderItem={({item}) => {
-            const isSelected = ids.includes(item.id);
-            return (
-              <AppBlock
-                mt={12}
-                style={[AppStyles.rowCenterBetween, {width: '100%'}]}>
-                <AppBlock row center>
-                  <LinearAvatar uri={item.avatar} size={40} />
-                  <AppText size={20}>
-                    {item.firstName + ' ' + item.lastName}
-                  </AppText>
-                </AppBlock>
-                <AppTouchableOpacity onPress={() => onItemPress(item.id)}>
-                  <IconCheckBox isChecked={isSelected} />
-                </AppTouchableOpacity>
-              </AppBlock>
-            );
-          }}
-        />
+            <FlatList
+              data={filterData}
+              contentContainerStyle={AppStyles.grow}
+              renderItem={({item}) => {
+                return (
+                  <AppTouchableOpacity
+                    style={AppStyles.rowCenter}
+                    mt={12}
+                    onPress={() => onItemPress(item.id)}>
+                    <LinearAvatar uri={item.avatar} size={40} />
+                    <AppText size={20}>
+                      {item.firstName + ' ' + item.lastName}
+                    </AppText>
+                  </AppTouchableOpacity>
+                );
+              }}
+            />
+          </AppBlock>
+        </View>
+      </ReactNativeModal>
 
-        <AppBlock justifyContent="flex-end" row>
-          <AppTouchableOpacity onPress={onClose}>
-            <AppText size={22} color="text">
-              Hủy
-            </AppText>
-          </AppTouchableOpacity>
-          <AppTouchableOpacity ml={12} onPress={onCreateChat}>
-            <AppText size={22} color="primary">
-              Tạo
-            </AppText>
-          </AppTouchableOpacity>
-        </AppBlock>
-      </AppBlock>
-    </ReactNativeModal>
+      <ModalAddGroupChat
+        isVisible={showAddGroup}
+        onClose={() => setShowAddGroup(false)}
+        navigation={navigation}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  modal: {flex: 1, margin: 0, alignItems: 'center'},
+  input: {
+    backgroundColor: 'white',
+    fontSize: 16,
+    flex: 1,
+    marginLeft: 8,
+  },
+  container: {
+    flexGrow: 1,
+    backgroundColor: color.white,
+  },
+  modal: {
+    flex: 1,
+    margin: 0,
+  },
+  textTitle: {
+    flex: 1,
+    fontWeight: 'bold',
+    fontSize: appSize(20),
+    color: color.primary,
+    marginLeft: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: color.primary,
+  },
 });
