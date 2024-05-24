@@ -56,12 +56,8 @@ export interface Resp_User {
   lastName: string;
   gender: string;
   createdAt: string;
-
   friends: string[];
   friend_requests: string[];
   sent_friend_requests: string[];
   token: string;
-  // otp: string;
-  // otp_expired: string;
-  // fcmToken: string[];
 }

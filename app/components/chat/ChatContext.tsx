@@ -1,12 +1,17 @@
-// AppContext.js
-
 import React, {useState} from 'react';
 
-export const ChatContext = React.createContext({
+type ChatContextType = {
+  channel: any;
+  setChannel: (channel: any) => void;
+  thread: any;
+  setThread: (thread: any) => void;
+};
+
+export const ChatContext = React.createContext<ChatContextType>({
   channel: null,
-  setChannel: (_channel: string) => {},
+  setChannel: (_channel: any) => {},
   thread: null,
-  setThread: (_thread: string) => {},
+  setThread: (_thread: any) => {},
 });
 
 export const ChatProvider = ({children}: any) => {

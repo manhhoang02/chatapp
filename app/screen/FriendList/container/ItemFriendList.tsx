@@ -11,6 +11,7 @@ import {BottomSheetModal} from '@gorhom/bottom-sheet';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
+import light from 'starling/theme/color/light';
 
 type Props = {
   item: Resp_User;
@@ -39,7 +40,7 @@ export default function ({item}: Props) {
           <Text style={styles.nameChat}>
             {item.firstName + ' ' + item.lastName}
           </Text>
-          <AppText size={14} color="black_70">
+          <AppText size={14} style={{color: light.black_70}}>
             {item.email}
           </AppText>
         </AppBlock>

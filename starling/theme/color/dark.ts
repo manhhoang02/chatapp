@@ -1,4 +1,4 @@
-import light from './light'
+import light from './light';
 const dark = {
   ...light,
   primary: '#101010',
@@ -18,6 +18,6 @@ const dark = {
   inputBackground: '#F4F6FB',
   inputBorder: '#848484',
   tabBar: '#101010',
-}
+};
 
-export default dark
+export default dark;

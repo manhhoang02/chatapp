@@ -12,7 +12,6 @@ import {
   useGetUserById,
   useSendRequestFriend,
 } from 'app/api/auth';
-import {getChat, createChat} from 'app/api/chat';
 import {useGetUserPosts} from 'app/api/post';
 import {Post} from 'app/api/post.type';
 import ItemPost from 'app/components/ItemPost';
@@ -85,31 +84,7 @@ export default function ({
     }
   };
 
-  const handleSendMsg = () => {
-    getChat(user.id, data!.id)
-      .then(res => {
-        if (res) {
-          navigation.navigate('ChatView', {
-            chatId: res._id,
-            chatName: data?.firstName + ' ' + data?.lastName,
-            avatar: data!.avatar,
-            friendId: data!.id,
-          });
-        } else {
-          createChat(user.id, data!.id)
-            .then(resp => {
-              navigation.navigate('ChatView', {
-                chatId: resp._id,
-                chatName: data?.firstName + ' ' + data?.lastName,
-                avatar: data!.avatar,
-                friendId: data!.id,
-              });
-            })
-            .catch();
-        }
-      })
-      .catch();
-  };
+  const handleSendMsg = () => {};
   const renderItem = ({item}: {item: Post}) => {
     return <ItemPost item={item} />;
   };

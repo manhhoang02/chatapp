@@ -1,7 +1,5 @@
 import {useMutation, useQuery} from '@tanstack/react-query';
-import axios from 'axios';
-import Config from 'react-native-config';
-import {ResLogin, ResUser, Resp_User} from './auth.type';
+import {Resp_User} from './auth.type';
 import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
 import useAuthStore from 'app/store/authStore';
@@ -42,51 +40,6 @@ export const useGetFriendRequests = ({
     },
   );
 };
-
-const sendOTP = async (email: string) =>
-  await axios
-    .post(`${Config.BASE_URL}/auth/forgot-password/send-otp`, {
-      email,
-    })
-    .then(({data}) => data)
-    .catch(err => {
-      throw new Error(err.message);
-    });
-
-export const useSendOTP = () =>
-  useMutation({mutationFn: (email: string) => sendOTP(email)});
-
-type ParamsVerifyOTP = {
-  email: string;
-  otp: string;
-};
-const verifyOTP = async (params: ParamsVerifyOTP) =>
-  await axios
-    .post(`${Config.BASE_URL}/auth/verify-otp`, params)
-    .then(({data}) => data)
-    .catch(err => {
-      throw new Error(err.message);
-    });
-
-export const useVerifyOTP = () =>
-  useMutation({mutationFn: (params: ParamsVerifyOTP) => verifyOTP(params)});
-
-type ParamsResetPassword = {
-  email: string;
-  password: string;
-};
-const resetPassword = async (params: ParamsResetPassword) =>
-  await axios
-    .post(`${Config.BASE_URL}/auth/reset-password`, params)
-    .then(({data}) => data)
-    .catch(err => {
-      throw new Error(err.message);
-    });
-
-export const useResetPassword = () =>
-  useMutation({
-    mutationFn: (params: ParamsResetPassword) => resetPassword(params),
-  });
 
 type AddFriendParams = {
   userId: string;
@@ -181,38 +134,6 @@ export const useCancelRequestFriend = () =>
       return {message: 'Hủy lời mời kết bạn thành công'};
     },
   );
-export const addFcmToken = async (fcmToken: string): Promise<ResUser> => {
-  return await axios
-    .post(`${Config.BASE_URL}/user/add-fcmToken`, {
-      fcmToken,
-    })
-    .then(({data}) => {
-      return data;
-    })
-    .catch(error => {
-      throw new Error(error.message);
-    });
-};
-
-type ParamsLoginSocial = {
-  email: string;
-  first_name: string;
-  last_name: string;
-  avatar: string;
-  role: string;
-};
-const loginSocial = async (params: ParamsLoginSocial): Promise<ResLogin> => {
-  return await axios
-    .post(`${Config.BASE_URL}/auth/loginSocial`, params)
-    .then(({data}) => {
-      return data;
-    })
-    .catch(error => {
-      throw new Error(error.message);
-    });
-};
-export const useLoginSocial = () =>
-  useMutation({mutationFn: (params: ParamsLoginSocial) => loginSocial(params)});
 
 export const getUserById = (userId: string): Promise<Resp_User> => {
   return firestore()
