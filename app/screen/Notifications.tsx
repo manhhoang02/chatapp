@@ -1,28 +1,33 @@
-import {Button, StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import color from '@abong.code/theme/color';
 import {AppBlock, AppText, appSize} from '@starlingtech/element';
-import {utils} from '@react-native-firebase/app';
-import storage from '@react-native-firebase/storage';
+import moment from 'moment';
+import AppStyles from 'elements/AppStyles';
 
 export default function Notifications() {
-  const reference = storage().ref('black-t-shirt-sm.png');
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Thông báo</Text>
-      <Button
-        title="abc"
-        onPress={async () => {
-          // path to existing file on filesystem
-          const pathToFile = `${utils.FilePath.PICTURES_DIRECTORY}/black-t-shirt-sm.png`;
-          // uploads file
-          await reference.putFile(pathToFile);
-        }}
-      />
-      <AppBlock flex center>
+      <AppBlock
+        style={{
+          borderWidth: StyleSheet.hairlineWidth,
+          borderRadius: 8,
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+        }}>
+        <AppText weight="700">Test thong bao</AppText>
+        <AppBlock style={AppStyles.rowCenterBetween}>
+          <AppText size={13} color="backdrop">
+            abcabc
+          </AppText>
+          <AppText size={11}>{moment().locale('vi').fromNow(true)}</AppText>
+        </AppBlock>
+      </AppBlock>
+      {/* <AppBlock flex center>
         <AppText size={50}>🤷‍♂️</AppText>
         <Text style={styles.titleEmpty}>Không có thông báo để hiển thị.</Text>
-      </AppBlock>
+      </AppBlock> */}
     </View>
   );
 }

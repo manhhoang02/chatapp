@@ -13,11 +13,10 @@ import LinearAvatar from 'app/components/LinearAvatar';
 import color from '@abong.code/theme/color';
 import AppStyles from 'elements/AppStyles';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
-import {createChat, getChat} from 'app/api/chat';
 import useAuthStore from 'app/store/authStore';
 import {getUserById, useDeleteFriend} from 'app/api/auth';
 import {
@@ -87,8 +86,6 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
 
   const handleSendMsg = () => {
     bottomRef.current?.close();
-
-    navigation.navigate('ChatView');
   };
 
   const handleNavigateProfile = () => {
@@ -108,7 +105,7 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
           <Text style={styles.nameChat}>
             {item.firstName + ' ' + item.lastName}
           </Text>
-          <AppText size={12} color="black_70">
+          <AppText size={12} style={{color: light.black_70}}>
             {item.email}
           </AppText>
         </AppBlock>
@@ -142,7 +139,7 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
             <Text style={[styles.text, {color: light.red}]}>
               Hủy kết bạn với {item.lastName}
             </Text>
-            <AppText size={12} color="black_70">
+            <AppText size={12} style={{color: light.black_70}}>
               Xóa {item.lastName} khỏi danh sách bạn bè
             </AppText>
           </AppBlock>

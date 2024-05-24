@@ -13,7 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {TextInput} from 'react-native';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import {CompositeNavigationProp, useNavigation} from '@react-navigation/native';
 import {MaterialTopTabNavigationProp} from '@react-navigation/material-top-tabs';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';

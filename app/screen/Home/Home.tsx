@@ -15,8 +15,6 @@ import {
 } from '@abong.code/config/FirebaseConfig';
 import {consoleLog} from '@abong.code/helpers/logHelper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {addFcmToken} from 'app/api/auth';
-import {showToastMessageError} from '@abong.code/helpers/messageHelper';
 import AppContainer from 'app/components/Global/AppContainer';
 import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
 import HomeHeader from './container/Home.Header';
@@ -40,17 +38,20 @@ export default function () {
     userId: user.id,
   });
 
-  const onPressNotification = useCallback((params: ParamsStack['ChatView']) => {
-    setTimeout(() => {
-      navigation.navigate('ChatView', {
-        chatId: JSON.parse(params.chatId),
-        chatName: JSON.parse(params.chatName),
-        friendId: JSON.parse(params.friendId),
-        avatar: JSON.parse(params.avatar),
-      });
-    }, 2000);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const onPressNotification = useCallback(
+    (params: ParamsStack['ChannelScreen']) => {
+      // setTimeout(() => {
+      //   navigation.navigate('ChatView', {
+      //     chatId: JSON.parse(params.chatId),
+      //     chatName: JSON.parse(params.chatName),
+      //     friendId: JSON.parse(params.friendId),
+      //     avatar: JSON.parse(params.avatar),
+      //   });
+      // }, 2000);
+      consoleLog(params, 'params');
+    },
+    [],
+  );
 
   useEffect(() => {
     getInitialNotification(e => onPressNotification(e));
@@ -64,21 +65,12 @@ export default function () {
       getFcmToken()
         .then(token => {
           AsyncStorage.setItem(AppConstant.SESSION.FCM_TOKEN, token);
-          addFcmToken(token)
-            .then()
-            .catch(err => showToastMessageError('Lỗi', err.message));
         })
         .catch(err => {
           // showToastMessageError('Lỗi', err.message);
           console.log(err);
         });
     } else {
-      addFcmToken(fcmToken)
-        .then(res => consoleLog(res, 'res-api-addFcm'))
-        .catch(err => {
-          // showToastMessageError('Lỗi', err.message);
-          console.log(err);
-        });
     }
   };
 

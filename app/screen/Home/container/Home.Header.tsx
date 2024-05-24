@@ -20,7 +20,7 @@ export default function HomeHeader(_props: Props) {
   };
 
   const handleSelectFile = async () => {
-    const results = await DocumentPicker.pickMultiple({
+    const results = await DocumentPicker.pick({
       allowMultiSelection: true,
       type: [DocumentPicker.types.video, DocumentPicker.types.images],
     });

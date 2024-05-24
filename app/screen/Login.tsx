@@ -1,5 +1,5 @@
 import color from '@abong.code/theme/color';
-import {getUserById, useLoginSocial} from 'app/api/auth';
+import {getUserById} from 'app/api/auth';
 import React, {useEffect, useState} from 'react';
 import {
   Image,
@@ -16,29 +16,22 @@ import {ParamsAuth} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {showToastMessageError} from '@abong.code/helpers/messageHelper';
 import auth from '@react-native-firebase/auth';
-import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {consoleLog, consolelog} from '@abong.code/helpers/logHelper';
+import {consoleLog} from '@abong.code/helpers/logHelper';
 import AppContainer from 'app/components/Global/AppContainer';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import AppStyles from 'elements/AppStyles';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-import AppConstant, {appSize} from '@abong.code/config/AppConstant';
+import {appSize} from '@abong.code/config/AppConstant';
 import IconEye from 'assets/icons/IconEye';
 import IconCheckBox from 'assets/icons/IconCheckBox';
-import IconGoogle from 'assets/icons/IconGoogle';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import useAuthStore from 'app/store/authStore';
-import {shallow} from 'zustand/shallow';
 
 export default function () {
   const insets = useSafeAreaInsets();
-  const [user, dispatchUser] = useAuthStore(
-    s => [s.user, s.dispatchUser],
-    shallow,
-  );
+  const dispatchUser = useAuthStore(s => s.dispatchUser);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,90 +40,6 @@ export default function () {
   const [rememberMe, setRememberMe] = useState(false);
 
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
-  const {mutate: loginSocial} = useLoginSocial();
-
-  const handleLoginFacebook = async () => {
-    // Attempt login with permissions
-    const result = await LoginManager.logInWithPermissions([
-      'public_profile',
-      'email',
-    ]);
-
-    if (result.isCancelled) {
-      throw 'User cancelled the login process';
-    }
-
-    // Once signed in, get the users AccesToken
-    const data = await AccessToken.getCurrentAccessToken();
-
-    if (!data) {
-      throw 'Something went wrong obtaining access token';
-    }
-
-    // Create a Firebase credential with the AccessToken
-    const facebookCredential = auth.FacebookAuthProvider.credential(
-      data.accessToken,
-    );
-
-    // Sign-in the user with the credential
-    const res = await auth().signInWithCredential(facebookCredential);
-    consoleLog(res);
-    if (res) {
-      loginSocial(
-        {
-          email: res.additionalUserInfo?.profile!.email,
-          first_name: res.additionalUserInfo?.profile!.first_name,
-          last_name: res.additionalUserInfo?.profile!.last_name,
-          avatar: res.additionalUserInfo?.profile!.picture.data.url,
-          role: res.additionalUserInfo!.providerId,
-        },
-        {
-          onSuccess: resLogin => {
-            getUserById(user.id).then(resUser => {
-              dispatchUser({...user, ...resUser});
-            });
-            AsyncStorage.setItem(AppConstant.SESSION.TOKEN, resLogin.token);
-          },
-        },
-      );
-    } else {
-      showToastMessageError('Thất bại!', 'Hãy kiểm tra lại kết nối!');
-    }
-  };
-
-  const handleLoginGoogle = async () => {
-    await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
-    // Get the users ID token
-    const {idToken} = await GoogleSignin.signIn();
-
-    // Create a Google credential with the token
-    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-    // Sign-in the user with the credential
-    const res = await auth().signInWithCredential(googleCredential);
-    // consoleLog(res);
-    if (res) {
-      loginSocial(
-        {
-          email: res.additionalUserInfo?.profile!.email,
-          first_name: res.additionalUserInfo?.profile!.family_name,
-          last_name: res.additionalUserInfo?.profile!.given_name,
-          avatar: res.additionalUserInfo?.profile!.picture,
-          role: res.additionalUserInfo!.providerId,
-        },
-        {
-          onSuccess: resLogin => {
-            getUserById(user.id).then(resUser => {
-              dispatchUser({...user, ...resUser});
-            });
-            AsyncStorage.setItem(AppConstant.SESSION.TOKEN, resLogin.token);
-          },
-        },
-      );
-    } else {
-      showToastMessageError('Thất bại!', 'Hãy kiểm tra lại kết nối!');
-    }
-  };
 
   const handleLogin = () => {
     setProcessing(true);
@@ -147,7 +56,7 @@ export default function () {
             AsyncStorage.setItem('id', resUser.id);
           }
         }
-        consolelog(res);
+        consoleLog(res);
         setProcessing(false);
       })
       .catch(err => {
@@ -262,32 +171,6 @@ export default function () {
           style={styles.mb19}
           backgroundColor="#635A8F"
         />
-        <Text style={[styles.signInWith, styles.mb19]}>Hoặc đăng nhập với</Text>
-
-        <View style={[styles.socialField, styles.mb19]}>
-          <TouchableOpacity
-            onPress={handleLoginFacebook}
-            style={[styles.socialBtn, {backgroundColor: color.btnFacebook}]}>
-            <MaterialCommunityIcons
-              name="facebook"
-              size={20}
-              color={color.white}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.socialBtn, {backgroundColor: color.btnTwitter}]}>
-            <MaterialCommunityIcons
-              name="twitter"
-              size={20}
-              color={color.white}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleLoginGoogle}
-            style={styles.socialBtn}>
-            <IconGoogle width={32} />
-          </TouchableOpacity>
-        </View>
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Bạn chưa có tài khoản?</Text>

@@ -1,37 +1,33 @@
-import {
-  chatApiKey,
-  chatClient,
-  useChatConfig,
-} from '@abong.code/config/chatConfig';
+import {chatApiKey} from 'app/components/chat/chatConfig';
+import useAuthStore from 'app/store/authStore';
 import {useEffect, useState} from 'react';
 import {StreamChat} from 'stream-chat';
 
-export const useChatClient = () => {
-  const {chatUserId, chatUserToken, chatUsername} = useChatConfig();
+export const chatClient = StreamChat.getInstance(chatApiKey);
 
-  const user = {
-    id: chatUserId,
-    name: chatUsername,
-  };
+export const useChatClient = () => {
+  const currentUser = useAuthStore(s => s.user);
 
   const [clientIsReady, setClientIsReady] = useState(false);
 
   useEffect(() => {
     const setupClient = async () => {
-      await chatClient.connectUser(user, chatUserToken);
+      await chatClient.connectUser(
+        {
+          id: currentUser.id,
+          name: currentUser.firstName + ' ' + currentUser.lastName,
+        },
+        chatClient.devToken(currentUser.id),
+      );
       setClientIsReady(true);
-
-      if (!chatClient.userID) {
-        await chatClient.connectUser(user, chatUserToken);
-        setClientIsReady(true);
-      } else {
-        await chatClient.disconnectUser();
-      }
     };
 
-    setupClient();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!chatClient.userID && currentUser.id) {
+      setupClient();
+    }
+  }, [currentUser.firstName, currentUser.id, currentUser.lastName]);
 
   return {clientIsReady};
 };
+
+export const disconnectChatUser = async () => chatClient.disconnectUser();

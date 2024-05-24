@@ -8,8 +8,8 @@
         "alias": {
           "app": "./app",
           "assets": "./assets",
-          "@abong.code":"./abong.code",
-          "@starling/theme": "./vn.starlingTech/theme/theming"
+          "@abong.code": "./abong.code",
+          "@starling/theme": "./starling/theme/theming"
         },
         "extensions": [
           ".ios.js",

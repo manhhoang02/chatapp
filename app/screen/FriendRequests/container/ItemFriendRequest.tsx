@@ -14,7 +14,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
 import LinearAvatar from 'app/components/LinearAvatar';
 import {AppBlock} from '@starlingtech/element';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import useAuthStore from 'app/store/authStore';
 import {useHomeStore} from 'app/store/homeStore';
 import {shallow} from 'zustand/shallow';

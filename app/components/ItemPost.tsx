@@ -72,7 +72,7 @@ export default function (props: Props) {
   const onShare = async () => {
     try {
       const result = await Share.share({
-        message: item.description + '' + item.files,
+        message: item.description + '-' + item.files,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {

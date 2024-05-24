@@ -17,7 +17,7 @@ import {
   AppText,
   AppTouchableOpacity,
 } from '@starlingtech/element';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import IconHeart from 'assets/icons/IconHeart';
 import AppStyles from 'elements/AppStyles';
 import {useKeyboard} from 'app/hook/keyboardHook';

@@ -1,11 +1,11 @@
 import {
   showToastMessageError,
   showToastMessageInfo,
+  showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
 import color from '@abong.code/theme/color';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {useSendOTP} from 'app/api/auth';
 import AppContainer from 'app/components/Global/AppContainer';
 import {ParamsAuth} from 'app/navigation/params';
 import AppStyles from 'elements/AppStyles';
@@ -21,13 +21,13 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import LinearGradient from 'react-native-linear-gradient';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import auth from '@react-native-firebase/auth';
 
 export default function () {
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
   const insets = useSafeAreaInsets();
 
   const [email, setEmail] = useState('manhkuma@gmail.com');
-  const {mutate} = useSendOTP();
   const validateEmail = (inputEmail: string) => {
     return inputEmail.match(
       // eslint-disable-next-line no-useless-escape
@@ -35,17 +35,20 @@ export default function () {
     );
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (validateEmail(email)) {
       showToastMessageInfo('Đang xử lý', 'Vui lòng đợi');
-      mutate(email, {
-        onSuccess: () => {
-          navigation.navigate('ConfirmOTP', {email});
-        },
-        onError: () => {
-          showToastMessageError('Thất bại', 'Email chưa được đăng ký sử dụng');
-        },
-      });
+      await auth()
+        .sendPasswordResetEmail(email)
+        .then(() => {
+          showToastMessageSuccess(
+            'Thành công',
+            'Vui lòng kiểm tra email của bạn.',
+          );
+        })
+        .catch(() => {
+          showToastMessageError('Error', 'Có lỗi xảy ra.');
+        });
     } else {
       showToastMessageError('Error', 'Chưa đúng định dạng email.');
     }

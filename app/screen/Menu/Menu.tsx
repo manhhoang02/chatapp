@@ -9,10 +9,11 @@ import BtnAction from './container/BtnAction';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearAvatar from 'app/components/LinearAvatar';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import {AppText} from '@starlingtech/element';
 import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
+import {disconnectChatUser} from 'app/hook/useChatClient';
 
 export default function () {
   const navigation =
@@ -32,7 +33,10 @@ export default function () {
         },
         {
           text: 'Đăng xuất',
-          onPress: () => signOut(),
+          onPress: async () => {
+            signOut();
+            disconnectChatUser();
+          },
         },
       ],
       {cancelable: false},

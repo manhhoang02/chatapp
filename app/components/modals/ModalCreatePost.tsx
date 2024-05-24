@@ -11,7 +11,7 @@ import {
   showToastMessageError,
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
-import light from 'vn.starlingTech/theme/color/light';
+import light from 'starling/theme/color/light';
 import IconAddImage from 'assets/icons/home/IconAddImage';
 import {AppText} from '@starlingtech/element';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -22,10 +22,8 @@ import {shallow} from 'zustand/shallow';
 import moment from 'moment';
 import useAuthStore from 'app/store/authStore';
 import {useCreatePost} from 'app/api/post';
-import {Post} from 'app/api/post.type';
 
-type Props = {item: Post};
-export default function ({item}: Props) {
+export default function () {
   const user = useAuthStore(s => s.user);
 
   const {top} = useSafeAreaInsets();
@@ -39,7 +37,10 @@ export default function ({item}: Props) {
 
   const {mutate: createPost} = useCreatePost();
 
-  const onClose = () => dispatchPost({visible: false, media: []});
+  const onClose = () => {
+    setDescription('');
+    dispatchPost({visible: false, media: []});
+  };
 
   const handleCreatePost = async () => {
     const files: string[] = [];
@@ -69,7 +70,7 @@ export default function ({item}: Props) {
   };
   const handleSelectFile = async () => {
     try {
-      const results = await DocumentPicker.pickMultiple({
+      const results = await DocumentPicker.pick({
         allowMultiSelection: true,
         type: [DocumentPicker.types.video, DocumentPicker.types.images],
       });
