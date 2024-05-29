@@ -36,6 +36,7 @@ export default function ModalAddGroupChat({
 
   const {data} = useGetListUsers({userId});
 
+  const [keyword, setKeyword] = useState('');
   const [name, setName] = useState('');
   const [ids, setIds] = useState<string[]>([]);
 
@@ -67,6 +68,15 @@ export default function ModalAddGroupChat({
     onClose();
     navigation.navigate('ChannelScreen');
   };
+
+  const filterData = data
+    ? data.filter(item => {
+        const username = item.firstName + ' ' + item.lastName;
+        if (username.toLowerCase().includes(keyword.toLowerCase())) {
+          return item;
+        }
+      })
+    : [];
   return (
     <ReactNativeModal
       animationIn={'slideInRight'}
@@ -98,6 +108,9 @@ export default function ModalAddGroupChat({
           <PaperTextInput
             label={'Tên nhóm'}
             mode="outlined"
+            contentStyle={{fontSize: appSize(14)}}
+            style={{height: appSize(40)}}
+            outlineStyle={{borderRadius: appSize(40)}}
             value={name}
             onChangeText={setName}
           />
@@ -106,11 +119,15 @@ export default function ModalAddGroupChat({
             <AppText style={{color: color.black04}} weight="500" size={20}>
               Đến:
             </AppText>
-            <TextInput placeholder="....." style={styles.input} />
+            <TextInput
+              value={keyword}
+              onChangeText={setKeyword}
+              style={styles.input}
+            />
           </AppBlock>
 
           <FlatList
-            data={data}
+            data={filterData}
             contentContainerStyle={AppStyles.grow}
             renderItem={({item}) => {
               const isSelected = ids.includes(item.id);

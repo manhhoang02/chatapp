@@ -63,3 +63,23 @@ export const useCreateComment = () =>
       }
     },
   );
+
+interface DeleteCommentParams {
+  commentId: string;
+  userId: string;
+}
+
+export const deleteComment = async ({
+  commentId,
+  userId,
+}: DeleteCommentParams) => {
+  const comment_doc = firestore()
+    .collection(COLLECTION.COMMENTS)
+    .doc(commentId);
+
+  const comment = (await comment_doc.get()).data() as Comment;
+  if (comment.author !== userId) {
+    throw new Error('Bạn không có quyền xóa bình luận này');
+  }
+  await comment_doc.delete();
+};

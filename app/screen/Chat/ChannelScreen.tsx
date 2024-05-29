@@ -9,6 +9,7 @@ import {useNavigation} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import color from '@abong.code/theme/color';
 import LinearAvatar from 'app/components/LinearAvatar';
+import {getStreamAvatar} from 'app/hook/useGetAvatar';
 
 export function ChannelScreen() {
   const {goBack} = useNavigation();
@@ -16,7 +17,7 @@ export function ChannelScreen() {
 
   consoleLog('channel', channel);
 
-  const avt = `https://getstream.io/random_png/?id=${channel.cid}&name=${channel.data?.name}`;
+  const {avatar} = getStreamAvatar(channel);
 
   return (
     <Channel channel={channel}>
@@ -28,7 +29,7 @@ export function ChannelScreen() {
             onPress={goBack}
             color={color.primary}
           />
-          <LinearAvatar uri={avt} size={40} style={styles.mh12} />
+          <LinearAvatar uri={avatar} size={40} style={styles.mh12} />
           <AppText size={16} weight="700" numberOfLines={1}>
             {channel.data?.name}
           </AppText>

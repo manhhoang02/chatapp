@@ -2,8 +2,7 @@ import {useMutation, useQuery} from '@tanstack/react-query';
 import {Resp_User} from './auth.type';
 import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
-import useAuthStore from 'app/store/authStore';
-import {shallow} from 'zustand/shallow';
+import {sendNotification} from './notification';
 
 export type FriendParams = {
   userId: string;
@@ -52,7 +51,7 @@ export const useAddFriend = () => {
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
 
-      const {friend_requests, friends} = await getUserById(userId);
+      const {friend_requests, friends, lastName} = await getUserById(userId);
       const {sent_friend_requests: f_sfr, friends: f_friends} =
         await getUserById(friendId);
 
@@ -68,20 +67,41 @@ export const useAddFriend = () => {
         friends: [...f_friends, userId],
       });
 
+      await sendNotification({
+        title: 'Thông báo kết bạn',
+        body: `${lastName} đã chấp nhận lời mời kết bạn của bạn`,
+        topics: [friendId],
+      });
+
       return {message: 'Thêm bạn thành công'};
     },
   );
 };
 
+type DeleteFriendRequestParams = {
+  userId: string;
+  friendId: string;
+};
+
 export const useDeleteFriendRequest = () => {
   return useMutation(
-    async ({userId, friendId}: FriendParams): Promise<{message: string}> => {
+    async ({
+      userId,
+      friendId,
+    }: DeleteFriendRequestParams): Promise<{message: string}> => {
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
+      const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
       const {friend_requests} = await getUserById(userId);
+      const {sent_friend_requests} = await getUserById(friendId);
 
       await userRef.update({
         friend_requests: friend_requests.filter(
           requestId => requestId !== friendId,
+        ),
+      });
+      await friendRef.update({
+        sent_friend_requests: sent_friend_requests.filter(
+          requestId => requestId !== userId,
         ),
       });
 
@@ -96,8 +116,7 @@ export const useSendRequestFriend = () =>
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
 
-      const sent_friend_requests = (await getUserById(userId))
-        .sent_friend_requests;
+      const {sent_friend_requests, lastName} = await getUserById(userId);
       const friend_requests = (await getUserById(friendId)).friend_requests;
 
       await userRef.update({
@@ -105,6 +124,12 @@ export const useSendRequestFriend = () =>
       });
       await friendRef.update({
         friend_requests: [...friend_requests, userId],
+      });
+
+      await sendNotification({
+        title: 'Thông báo kết bạn',
+        body: `${lastName} muốn kết bạn với bạn`,
+        topics: [friendId],
       });
 
       return {message: 'Thêm bạn thành công'};
@@ -235,29 +260,21 @@ export const useDeleteFriend = () => {
       friendId,
     }: DeleteFriendParams): Promise<{message: string}> => {
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
+      const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
 
       const userDoc = await userRef.get();
       const currentFriends: string[] = userDoc.data()?.friends || [];
+      const {friends} = await getUserById(friendId);
 
       const updatedFriends = currentFriends.filter(
         friend => friend !== friendId,
       );
 
       await userRef.update({friends: updatedFriends});
-
+      await friendRef.update({
+        friends: friends.filter(requestId => requestId !== userId),
+      });
       return {message: 'Đã xóa bạn bè'};
     },
   );
-};
-
-export const getMyProfileAndDispatch = async () => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const [dispatchUser, user] = useAuthStore(
-    s => [s.dispatchUser, s.user],
-    shallow,
-  );
-
-  const resUser = await getUserById(user.id);
-
-  dispatchUser({...user, ...resUser});
 };

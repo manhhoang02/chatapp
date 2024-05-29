@@ -48,8 +48,12 @@ export default function (props: Props) {
   const [quantityLikes, setQuantityLikes] = useState(
     item.users_liked.length || 0,
   );
+  const [needReload, setNeedReload] = useState(0);
+  const [postId, setPostId] = useState('');
 
   const {data: author} = useGetUserById(item.author);
+
+  console.log(postId, 'postId');
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -62,7 +66,9 @@ export default function (props: Props) {
   };
 
   const handleComment = () => {
-    commentSheetRef.current?.present();
+    // commentSheetRef.current?.present();
+    setPostId(item.id);
+    setNeedReload(moment().unix());
   };
 
   const handleOptions = () => {
@@ -171,7 +177,11 @@ export default function (props: Props) {
         </AppBlock>
       </View>
 
-      <ModalComment bottomRef={commentSheetRef} postId={item.id} />
+      <ModalComment
+        bottomRef={commentSheetRef}
+        postId={postId}
+        needReload={needReload}
+      />
       <ModalPostActions bottomRef={actionsSheetRef} item={item} />
     </>
   );

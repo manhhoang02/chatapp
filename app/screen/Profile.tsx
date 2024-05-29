@@ -12,6 +12,7 @@ import {
   useGetUserById,
   useSendRequestFriend,
 } from 'app/api/auth';
+import {sendNotification} from 'app/api/notification';
 import {useGetUserPosts} from 'app/api/post';
 import {Post} from 'app/api/post.type';
 import ItemPost from 'app/components/ItemPost';
@@ -61,14 +62,28 @@ export default function ({
 
       if (!isFriend && !isSentFriendReq) {
         sendR(params, {
-          onSuccess,
+          onSuccess: async response => {
+            onSuccess(response);
+            await sendNotification({
+              title: 'Thông báo kết bạn',
+              body: `${user.lastName} muốn kết bạn với bạn`,
+              topics: [data.id],
+            });
+          },
           onError: () => {
             showToastMessageError('Thất bại', 'Không thể gửi lời mời');
           },
         });
       } else if (isFriendRequest) {
         acceptR(params, {
-          onSuccess,
+          onSuccess: async response => {
+            onSuccess(response);
+            await sendNotification({
+              title: 'Thông báo kết bạn',
+              body: `${user.lastName} muốn kết bạn với bạn`,
+              topics: [data.id],
+            });
+          },
           onError: () => {
             showToastMessageError('Lỗi', 'Đã xảy ra lỗi');
           },
@@ -123,7 +138,9 @@ export default function ({
         style={{marginTop: -80, marginLeft: 16}}
       />
       <View style={{paddingHorizontal: appSize(16), flex: 1}}>
-        <Text style={styles.name}>{user.firstName + ' ' + user.lastName}</Text>
+        <Text style={styles.name}>
+          {data?.firstName + ' ' + data?.lastName}
+        </Text>
         {data?.id !== user.id && (
           <View style={styles.containerBtn}>
             <TouchableOpacity

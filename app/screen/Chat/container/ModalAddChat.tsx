@@ -42,6 +42,7 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
       members: [userId, id],
       name: friend.firstName + ' ' + friend.lastName,
     });
+
     setChannel(channel);
     onClose();
     navigation.navigate('ChannelScreen');
@@ -49,8 +50,8 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
 
   const filterData = data
     ? data.filter(item => {
-        const name = item.firstName + ' ' + item.lastName;
-        if (name.toLowerCase().includes(keyword.toLowerCase())) {
+        const username = item.firstName + ' ' + item.lastName;
+        if (username.toLowerCase().includes(keyword.toLowerCase())) {
           return item;
         }
       })
@@ -89,7 +90,6 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
                 Đến:
               </AppText>
               <TextInput
-                placeholder="....."
                 style={styles.input}
                 value={keyword}
                 onChangeText={setKeyword}

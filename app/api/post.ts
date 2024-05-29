@@ -3,6 +3,7 @@ import {Post} from './post.type';
 import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
 import {getUserById} from './auth';
+import {sendNotification} from './notification';
 
 type ParamsGetPosts = {
   reload?: number;
@@ -33,25 +34,21 @@ export const useGetPosts = ({reload, userId}: ParamsGetPosts) =>
     }
   });
 
-export const getPostById = (postId: string): Promise<Post> => {
-  return firestore()
-    .collection(COLLECTION.POSTS)
-    .doc(postId)
-    .get()
-    .then(response => {
-      if (response.exists) {
-        return response.data() as Post;
-      } else {
-        throw new Error('Không tìm thấy bài viết');
-      }
-    })
-    .catch(error => {
-      throw error;
-    });
-};
+export const useGetPostById = (postId: string, reload?: number) => {
+  return useQuery(
+    ['GET-POST-BY-ID', postId, reload],
+    async (): Promise<Post> => {
+      const post = await firestore()
+        .collection(COLLECTION.POSTS)
+        .doc(postId)
+        .get();
 
-export const useGetPostById = (postId: string) => {
-  return useQuery(['GET-POST-BY_ID', postId], () => getPostById(postId));
+      if (post.exists) {
+        return post.data() as Post;
+      }
+      throw new Error('Không tìm thấy bài viết');
+    },
+  );
 };
 
 type CreatePostParams = {
@@ -65,6 +62,8 @@ export const createPost = async (
 ): Promise<{message: string}> => {
   const post_doc = firestore().collection(COLLECTION.POSTS).doc();
 
+  const user = await getUserById(params.author);
+
   return post_doc
     .set({
       ...params,
@@ -73,7 +72,15 @@ export const createPost = async (
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
-    .then(() => {
+    .then(async () => {
+      await sendNotification({
+        title: 'Thông báo',
+        body: `${
+          user.firstName + ' ' + user.lastName
+        } đã đăng một bài viết mới`,
+        topics: [...user.friends],
+      });
+
       return {
         message: 'Thành công! Đã đăng bài viết mới',
       };

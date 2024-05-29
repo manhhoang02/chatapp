@@ -14,6 +14,7 @@ import {AppText} from '@starlingtech/element';
 import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
 import {disconnectChatUser} from 'app/hook/useChatClient';
+import messaging from '@react-native-firebase/messaging';
 
 export default function () {
   const navigation =
@@ -36,6 +37,11 @@ export default function () {
           onPress: async () => {
             signOut();
             disconnectChatUser();
+            messaging()
+              .unsubscribeFromTopic(user.id)
+              .then(() =>
+                console.log('Unsubscribed fom the topic: ' + user.id),
+              );
           },
         },
       ],

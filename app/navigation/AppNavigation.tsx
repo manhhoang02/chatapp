@@ -12,6 +12,8 @@ import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
 import {ChatProvider} from 'app/components/chat/ChatContext';
 import {useChatClient} from 'app/hook/useChatClient';
+import useFirebaseNotification from 'app/hook/useFirebaseNotification';
+import messaging from '@react-native-firebase/messaging';
 
 export default function () {
   const [user, dispatchUser] = useAuthStore(
@@ -31,6 +33,9 @@ export default function () {
         });
         // AsyncStorage.setItem('id', resUser.id);
       }
+      messaging()
+        .subscribeToTopic(uid)
+        .then(() => console.log('Subscribed to topic: ' + uid));
     } else {
       setIsLoading(false);
     }
@@ -41,6 +46,7 @@ export default function () {
   }, []);
 
   useChatClient();
+  useFirebaseNotification();
 
   if (isLoading) {
     return (

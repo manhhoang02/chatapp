@@ -28,6 +28,7 @@ import IconEye from 'assets/icons/IconEye';
 import IconCheckBox from 'assets/icons/IconCheckBox';
 import light from 'starling/theme/color/light';
 import useAuthStore from 'app/store/authStore';
+import messaging from '@react-native-firebase/messaging';
 
 export default function () {
   const insets = useSafeAreaInsets();
@@ -55,6 +56,10 @@ export default function () {
             });
             AsyncStorage.setItem('id', resUser.id);
           }
+
+          messaging()
+            .subscribeToTopic(uid)
+            .then(() => console.log('Subscribed to topic: ' + uid));
         }
         consoleLog(res);
         setProcessing(false);

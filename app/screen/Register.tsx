@@ -27,6 +27,7 @@ import {
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import light from 'starling/theme/color/light';
+import messaging from '@react-native-firebase/messaging';
 
 export default function () {
   const insets = useSafeAreaInsets();
@@ -60,6 +61,8 @@ export default function () {
     auth()
       .createUserWithEmailAndPassword(email, password)
       .then(res => {
+        setProcessing(false);
+
         const uid = res.user.uid;
         // const avt = `https://getstream.io/random_png/?id=${uid}&name=${firstName}+${lastName}`;
         const avt =
@@ -88,9 +91,14 @@ export default function () {
             showToastMessageSuccess('Đăng ký thành công');
 
             navigation.navigate('Login');
+
+            messaging()
+              .subscribeToTopic(uid)
+              .then(() => console.log('Subscribed to topic: ' + uid));
           });
       })
       .catch(err => {
+        setProcessing(false);
         if (err.code === 'auth/email-already-in-use') {
           showToastMessageError('Địa chỉ email đã được sử dụng!');
         }

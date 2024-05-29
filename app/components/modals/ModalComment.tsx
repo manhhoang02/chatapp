@@ -4,7 +4,7 @@ import {useGetComments, useCreateComment} from 'app/api/comment';
 import {likeOrDislikePost, useGetPostById} from 'app/api/post';
 import React, {cloneElement, useEffect, useState} from 'react';
 
-import {StyleSheet, TextInput, TouchableOpacity} from 'react-native';
+import {Button, StyleSheet, TextInput, TouchableOpacity} from 'react-native';
 import ItemComment from '../ItemComment';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -28,13 +28,16 @@ import {BottomSheetFlatList} from '@gorhom/bottom-sheet';
 import IconAngleRight from 'assets/icons/IconAngleRight';
 import useAuthStore from 'app/store/authStore';
 import DocumentPicker from 'react-native-document-picker';
+import {useHomeStore} from 'app/store/homeStore';
+import {Post} from 'app/api/post.type';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
   postId: string;
+  needReload?: number;
 };
 
-export default function ({bottomRef, postId}: Props) {
+export default function ({bottomRef, postId, needReload}: Props) {
   const {user} = useAuthStore();
   const {bottom} = useSafeAreaInsets();
 
@@ -50,7 +53,15 @@ export default function ({bottomRef, postId}: Props) {
 
   const {mutate: createCmt} = useCreateComment();
   const {data} = useGetComments({postId, reload});
-  const {data: post} = useGetPostById(postId);
+  const {data: post, refetch} = useGetPostById(postId, needReload);
+
+  useEffect(() => {
+    if (postId) {
+      refetch();
+      console.log(post, 'postId');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId]);
 
   const {keyboardVisible} = useKeyboard();
 
@@ -91,7 +102,7 @@ export default function ({bottomRef, postId}: Props) {
 
   const handleSelectFile = async () => {
     try {
-      const results = await DocumentPicker.pickMultiple({
+      const results = await DocumentPicker.pick({
         allowMultiSelection: true,
         type: [DocumentPicker.types.video, DocumentPicker.types.images],
       });
@@ -183,6 +194,7 @@ export default function ({bottomRef, postId}: Props) {
 
   return (
     <BottomSheetContainer bottomRef={bottomRef}>
+      <Button title="reload" onPress={() => refetch()} />
       {cloneElement(HeaderComponent)}
       <BottomSheetFlatList
         data={data}

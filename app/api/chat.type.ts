@@ -70,10 +70,3 @@ export interface Channel {
   createdAt: string;
   updatedAt: string;
 }
-
-export interface Notification {
-  id: string;
-  title: string;
-  body: string;
-  time: string;
-}
