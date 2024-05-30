@@ -14,6 +14,8 @@ import {ChatProvider} from 'app/components/chat/ChatContext';
 import {useChatClient} from 'app/hook/useChatClient';
 import useFirebaseNotification from 'app/hook/useFirebaseNotification';
 import messaging from '@react-native-firebase/messaging';
+import {navigationRef} from 'app/utils/staticNavigation';
+import {requestNotifications} from 'react-native-permissions';
 
 export default function () {
   const [user, dispatchUser] = useAuthStore(
@@ -24,6 +26,8 @@ export default function () {
   const [isLoading, setIsLoading] = useState(false);
 
   const init = async () => {
+    await requestNotifications(['alert', 'sound']);
+
     const uid = await AsyncStorage.getItem('id');
     if (uid) {
       const resUser = await getUserById(uid);
@@ -58,7 +62,7 @@ export default function () {
 
   return (
     <ChatProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         {user.id ? <MainNavigator /> : <AuthNavigator />}
       </NavigationContainer>
     </ChatProvider>

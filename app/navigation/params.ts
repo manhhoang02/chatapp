@@ -19,6 +19,8 @@ export type ParamsStack = {
   FriendRequests: undefined;
   EmptyScreen1: undefined;
   ChannelScreen: undefined;
+  CallScreen: undefined;
+  InCallScreen: undefined;
 };
 export type ParamsAuth = {
   SplashScreen: undefined;

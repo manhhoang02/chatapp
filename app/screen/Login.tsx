@@ -16,7 +16,6 @@ import {ParamsAuth} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {showToastMessageError} from '@abong.code/helpers/messageHelper';
 import auth from '@react-native-firebase/auth';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {consoleLog} from '@abong.code/helpers/logHelper';
 import AppContainer from 'app/components/Global/AppContainer';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
@@ -48,6 +47,7 @@ export default function () {
       .signInWithEmailAndPassword(email, password)
       .then(async res => {
         const uid = res.user.uid;
+
         if (uid) {
           const resUser = await getUserById(uid);
           if (resUser) {
@@ -55,6 +55,11 @@ export default function () {
               ...resUser,
             });
             AsyncStorage.setItem('id', resUser.id);
+            AsyncStorage.setItem(
+              '@userName',
+              `${resUser.firstName} ${resUser.lastName}`,
+            );
+            AsyncStorage.setItem('@userAvatar', resUser.avatar);
           }
 
           messaging()
@@ -110,12 +115,6 @@ export default function () {
     navigation.navigate('ConfirmEmail');
   };
 
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId:
-        '967140539717-7q3b9isgbbmkbt3af9970tm4s7srtomk.apps.googleusercontent.com',
-    });
-  }, []);
   return (
     <AppContainer>
       <KeyboardAwareScrollView
