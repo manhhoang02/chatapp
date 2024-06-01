@@ -7,7 +7,7 @@ import useAuthStore from 'app/store/authStore';
 import moment from 'moment';
 
 export const getAccessToken = async () => {
-  const HOST = '192.168.1.216';
+  const HOST = '192.168.1.5';
   try {
     const response = await axios.get(`http://${HOST}:3000/access-token`);
     return response.data.access_token;

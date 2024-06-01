@@ -26,6 +26,8 @@ import {
 import {useHomeStore} from 'app/store/homeStore';
 import moment from 'moment';
 import {shallow} from 'zustand/shallow';
+import {useChatContext} from 'app/components/chat/ChatContext';
+import {chatClient} from 'app/hook/useChatClient';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
@@ -43,8 +45,9 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
     s => [s.user, s.dispatchUser],
     shallow,
   );
-  const navigation =
-    useNavigation<NativeStackNavigationProp<ParamsStack, 'TabScreen'>>();
+  const {setChannel} = useChatContext();
+
+  const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
   const dispatchSync = useHomeStore(s => s.dispatchSync);
 
@@ -84,8 +87,16 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
     );
   };
 
-  const handleSendMsg = () => {
+  const handleSendMsg = async () => {
+    const friend = await getUserById(item.id);
+    const channel = chatClient.channel('messaging', {
+      members: [user.id, item.id],
+      name: friend.firstName + ' ' + friend.lastName,
+    });
+
+    setChannel(channel);
     bottomRef.current?.close();
+    navigation.navigate('ChannelScreen');
   };
 
   const handleNavigateProfile = () => {

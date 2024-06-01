@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import AppConstant, {appSize} from '@abong.code/config/AppConstant';
 import {Text, TextInput, TouchableOpacity} from 'react-native';
 import {StyleSheet, View} from 'react-native';
@@ -21,7 +21,8 @@ import {useHomeStore} from 'app/store/homeStore';
 import {shallow} from 'zustand/shallow';
 import moment from 'moment';
 import useAuthStore from 'app/store/authStore';
-import {useCreatePost} from 'app/api/post';
+import {useCreatePost, useEditPost} from 'app/api/post';
+import {FileType, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
 
 export default function () {
   const user = useAuthStore(s => s.user);
@@ -33,33 +34,65 @@ export default function () {
     shallow,
   );
 
-  const [description, setDescription] = useState(post.data?.description || '');
+  const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    if (post.data) {
+      setDescription(post.data.description);
+    }
+  }, [post.data]);
 
   const {mutate: createPost} = useCreatePost();
+  const {mutate: editPost} = useEditPost();
 
   const onClose = () => {
     setDescription('');
-    dispatchPost({visible: false, media: []});
+    dispatchPost({visible: false, media: [], data: undefined});
+  };
+
+  const handleUploadToCloudStorage = () => {
+    post.media.map(async file => {
+      const fileType: FileType = {
+        uri: file.uri,
+        name: file.name || '',
+      };
+      return await uploadToCloudStorage(fileType);
+    });
   };
 
   const handleCreatePost = async () => {
-    const files: string[] = [];
-    for (let uri of post.media) {
-      files.push(uri.uri);
+    if (post.data) {
+      editPost(
+        {
+          postId: post.data.id,
+          description,
+          files: post.media,
+        },
+        {
+          onSuccess: async res => {
+            showToastMessageSuccess(res.message);
+            handleUploadToCloudStorage();
+            dispatchSync({post: moment().unix()});
+            onClose();
+          },
+          onError: () => {
+            showToastMessageError('Thất bại!', 'Đã có lỗi xảy ra');
+          },
+        },
+      );
+      return;
     }
-
     createPost(
       {
         author: user.id,
         description,
-        files,
+        files: post.media,
       },
       {
         onSuccess: res => {
           showToastMessageSuccess(res.message);
-          dispatchPost({media: []});
+          handleUploadToCloudStorage();
           dispatchSync({post: moment().unix()});
-          setDescription('');
           onClose();
         },
         onError: () => {
@@ -68,12 +101,14 @@ export default function () {
       },
     );
   };
+
   const handleSelectFile = async () => {
     try {
       const results = await DocumentPicker.pick({
         allowMultiSelection: true,
         type: [DocumentPicker.types.video, DocumentPicker.types.images],
       });
+
       dispatchPost({media: results});
     } catch (error) {
       if (DocumentPicker.isCancel(error)) {
@@ -105,7 +140,9 @@ export default function () {
               onPress={onClose}
               color={color.primary}
             />
-            <Text style={styles.textTitle}>Tạo bài viết</Text>
+            <Text style={styles.textTitle}>
+              {post.data ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+            </Text>
 
             <TouchableOpacity
               style={[
@@ -129,7 +166,7 @@ export default function () {
                         : light.gray,
                   },
                 ]}>
-                Đăng
+                {post.data ? 'Lưu' : 'Đăng'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -144,7 +181,7 @@ export default function () {
             multiline
           />
 
-          <CreatePostMediaField files={post.media} />
+          <CreatePostMediaField />
 
           <TouchableOpacity
             style={[styles.btnUploadFile, styles.borderTop]}

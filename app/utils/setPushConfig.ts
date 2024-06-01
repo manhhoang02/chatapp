@@ -11,14 +11,11 @@ import {chatClient} from 'app/hook/useChatClient';
 export function setPushConfig() {
   StreamVideoRN.setPushConfig({
     ios: {
-      // add your push_provider_name for iOS that you have setup in Stream dashboard
-      pushProviderName: __DEV__ ? 'apn-video-staging' : 'apn-video-production',
+      pushProviderName: 'rn-apn-video',
     },
     android: {
       // add your push_provider_name for Android that you have setup in Stream dashboard
-      pushProviderName: __DEV__
-        ? 'firebase-video-staging'
-        : 'firebase-video-production',
+      pushProviderName: 'rn-fcm-video',
       // configure the notification channel to be used for incoming calls for Android.
       callChannel: {
         id: 'stream_call_notifications',

@@ -7,7 +7,7 @@ import {
   appSize,
 } from '@starlingtech/element';
 import ReactNativeModal from 'react-native-modal';
-import {getUserById, useGetListUsers} from 'app/api/auth';
+import {getUserById, useGetFriends} from 'app/api/auth';
 import LinearAvatar from 'app/components/LinearAvatar';
 import AppStyles from 'elements/AppStyles';
 import {chatClient} from 'app/hook/useChatClient';
@@ -29,11 +29,10 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
   const userId = useAuthStore(s => s.user.id);
   const {setChannel} = useChatContext();
 
-  const {data} = useGetListUsers({userId});
-
   const [keyword, setKeyword] = useState('');
-
   const [showAddGroup, setShowAddGroup] = useState(false);
+
+  const {data} = useGetFriends({userId, keyword});
 
   const onItemPress = async (id: string) => {
     const friend = await getUserById(id);
@@ -48,14 +47,6 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
     navigation.navigate('ChannelScreen');
   };
 
-  const filterData = data
-    ? data.filter(item => {
-        const username = item.firstName + ' ' + item.lastName;
-        if (username.toLowerCase().includes(keyword.toLowerCase())) {
-          return item;
-        }
-      })
-    : [];
   return (
     <>
       <ReactNativeModal
@@ -97,7 +88,7 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
             </AppBlock>
 
             <FlatList
-              data={filterData}
+              data={data}
               contentContainerStyle={AppStyles.grow}
               renderItem={({item}) => {
                 return (

@@ -9,6 +9,9 @@ import {useHomeStore} from 'app/store/homeStore';
 import DocumentPicker from 'react-native-document-picker';
 import useAuthStore from 'app/store/authStore';
 import {useGetUserById} from 'app/api/auth';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {ParamsStack} from 'app/navigation/params';
 
 type Props = {};
 
@@ -82,7 +85,14 @@ export default function HomeHeader(_props: Props) {
 
 function Item({id}: {id: string}) {
   const {data: friend} = useGetUserById(id);
-  return <LinearAvatar uri={friend?.avatar} name={friend?.lastName} />;
+  const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
+  return (
+    <LinearAvatar
+      uri={friend?.avatar}
+      name={friend?.lastName}
+      onPress={() => navigation.navigate('Profile', {id})}
+    />
+  );
 }
 
 const styles = StyleSheet.create({

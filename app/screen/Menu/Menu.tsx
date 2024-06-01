@@ -1,8 +1,6 @@
 import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {ParamsStack} from 'app/navigation/params';
+import {TopTabScreenProps} from 'app/navigation/params';
 import React from 'react';
 import {Alert, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import BtnAction from './container/BtnAction';
@@ -16,9 +14,7 @@ import {shallow} from 'zustand/shallow';
 import {disconnectChatUser} from 'app/hook/useChatClient';
 import messaging from '@react-native-firebase/messaging';
 
-export default function () {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<ParamsStack, 'TabScreen'>>();
+export default function ({navigation}: TopTabScreenProps<'Tab5'>) {
   const {bottom} = useSafeAreaInsets();
   const [user, signOut] = useAuthStore(s => [s.user, s.signOut], shallow);
 
@@ -85,6 +81,7 @@ export default function () {
             />
           }
           text={'Đổi mật khẩu'}
+          onPress={() => navigation.navigate('ResetPassword')}
         />
         <BtnAction
           icon={

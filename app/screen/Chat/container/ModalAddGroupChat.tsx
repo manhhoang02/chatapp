@@ -7,7 +7,7 @@ import {
   appSize,
 } from '@starlingtech/element';
 import ReactNativeModal from 'react-native-modal';
-import {useGetListUsers} from 'app/api/auth';
+import {useGetFriends} from 'app/api/auth';
 import LinearAvatar from 'app/components/LinearAvatar';
 import AppStyles from 'elements/AppStyles';
 import {chatClient} from 'app/hook/useChatClient';
@@ -34,11 +34,11 @@ export default function ModalAddGroupChat({
   const userId = useAuthStore(s => s.user.id);
   const {setChannel} = useChatContext();
 
-  const {data} = useGetListUsers({userId});
-
   const [keyword, setKeyword] = useState('');
   const [name, setName] = useState('');
   const [ids, setIds] = useState<string[]>([]);
+
+  const {data} = useGetFriends({userId, keyword});
 
   const onItemPress = async (id: string) => {
     if (ids.includes(id)) {
@@ -69,14 +69,6 @@ export default function ModalAddGroupChat({
     navigation.navigate('ChannelScreen');
   };
 
-  const filterData = data
-    ? data.filter(item => {
-        const username = item.firstName + ' ' + item.lastName;
-        if (username.toLowerCase().includes(keyword.toLowerCase())) {
-          return item;
-        }
-      })
-    : [];
   return (
     <ReactNativeModal
       animationIn={'slideInRight'}
@@ -127,7 +119,7 @@ export default function ModalAddGroupChat({
           </AppBlock>
 
           <FlatList
-            data={filterData}
+            data={data}
             contentContainerStyle={AppStyles.grow}
             renderItem={({item}) => {
               const isSelected = ids.includes(item.id);
@@ -137,7 +129,6 @@ export default function ModalAddGroupChat({
                   style={[AppStyles.rowCenterBetween, {width: '100%'}]}>
                   <AppTouchableOpacity
                     style={AppStyles.rowCenter}
-                    mt={12}
                     onPress={() => onItemPress(item.id)}>
                     <LinearAvatar uri={item.avatar} size={40} />
                     <AppText size={20}>

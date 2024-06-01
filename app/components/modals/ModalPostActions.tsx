@@ -13,6 +13,7 @@ import {useHomeStore} from 'app/store/homeStore';
 import moment from 'moment';
 import {shallow} from 'zustand/shallow';
 import {Post} from 'app/api/post.type';
+import useAuthStore from 'app/store/authStore';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
@@ -20,8 +21,9 @@ type Props = {
 };
 
 export default function ({bottomRef, item}: Props) {
-  const [post, dispatchPost, dispatchSync] = useHomeStore(
-    s => [s.post, s.dispatchPost, s.dispatchSync],
+  const userId = useAuthStore(s => s.user.id);
+  const [dispatchPost, dispatchSync] = useHomeStore(
+    s => [s.dispatchPost, s.dispatchSync],
     shallow,
   );
 
@@ -60,15 +62,17 @@ export default function ({bottomRef, item}: Props) {
   return (
     <BottomSheetContainer bottomRef={bottomRef} snapPoints={['18%']}>
       <AppBlock flex ph={12}>
-        <AppTouchableOpacity style={styles.btn} onPress={handleEdit}>
-          <Ionicons
-            name="create-outline"
-            size={30}
-            color={color.primary}
-            style={styles.mr10}
-          />
-          <Text style={styles.text}>Sửa bài viết</Text>
-        </AppTouchableOpacity>
+        {item.author === userId && (
+          <AppTouchableOpacity style={styles.btn} onPress={handleEdit}>
+            <Ionicons
+              name="create-outline"
+              size={30}
+              color={color.primary}
+              style={styles.mr10}
+            />
+            <Text style={styles.text}>Sửa bài viết</Text>
+          </AppTouchableOpacity>
+        )}
         <AppTouchableOpacity style={styles.btn} onPress={handleDeletePost}>
           <Ionicons
             name="trash-outline"

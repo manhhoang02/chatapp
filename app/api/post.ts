@@ -4,6 +4,8 @@ import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
 import {getUserById} from './auth';
 import {sendNotification} from './notification';
+import {DocumentPickerResponse} from 'react-native-document-picker';
+import moment from 'moment';
 
 type ParamsGetPosts = {
   reload?: number;
@@ -53,7 +55,7 @@ export const useGetPostById = (postId: string, reload?: number) => {
 
 type CreatePostParams = {
   author: string;
-  files: string[];
+  files: DocumentPickerResponse[];
   description: string;
 };
 
@@ -95,23 +97,28 @@ export const useCreatePost = () =>
 
 export const likeOrDislikePost = async (postId: string, userId: string) => {
   const postReference = firestore().doc(`${COLLECTION.POSTS}/${postId}`);
+  const post = await postReference.get();
+  const data = post.data() as Post;
+  const {firstName, lastName} = await getUserById(userId);
+  const name = firstName + ' ' + lastName;
 
-  return await firestore().runTransaction(async transaction => {
-    const postSnapshot = await transaction.get(postReference);
+  if (data.users_liked.includes(userId)) {
+    await postReference.update({
+      users_liked: firestore.FieldValue.arrayRemove(userId),
+    });
+  } else {
+    await postReference.update({
+      users_liked: firestore.FieldValue.arrayUnion(userId),
+    });
 
-    if (!postSnapshot.exists) {
-      throw new Error('Bài viết không tồn tại!');
+    if (data.author !== userId) {
+      await sendNotification({
+        title: 'Thông báo',
+        body: `${name} đã thích bài viết của bạn`,
+        topics: [data.author],
+      });
     }
-
-    const postData = postSnapshot.data() as Post;
-    const isLiked = postData.users_liked.includes(userId);
-
-    const updatedUsersLiked = isLiked
-      ? postData.users_liked.filter(id => id !== userId)
-      : [...postData.users_liked, userId];
-
-    transaction.update(postReference, {users_liked: updatedUsersLiked});
-  });
+  }
 };
 
 export const useDeletePost = () => {
@@ -140,8 +147,30 @@ export const useGetUserPosts = ({reload, userId}: GetUserPostsParams) =>
       querySnapshot.forEach(documentSnapshot => {
         posts.push(documentSnapshot.data() as Post);
       });
-      return posts;
+      return posts.sort((a, b) =>
+        moment(b.updatedAt).diff(moment(a.updatedAt)),
+      );
     } catch (error) {
       throw error;
     }
   });
+
+export const useEditPost = () => {
+  return useMutation(
+    async (params: {
+      postId: string;
+      description?: string;
+      files?: DocumentPickerResponse[];
+    }) => {
+      const postReference = firestore().doc(
+        `${COLLECTION.POSTS}/${params.postId}`,
+      );
+      await postReference.update({
+        description: params.description,
+        files: params.files,
+        updatedAt: new Date().toISOString(),
+      });
+      return {message: 'Thành công! Đã chỉnh sửa bài viết'};
+    },
+  );
+};

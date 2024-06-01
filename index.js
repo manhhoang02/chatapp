@@ -10,5 +10,5 @@ import {handlePushEvent} from 'app/hook/useFirebaseNotification';
 import {setPushConfig} from 'app/utils/setPushConfig';
 
 notifee.onBackgroundEvent(handlePushEvent);
-setPushConfig();
+// setPushConfig();
 AppRegistry.registerComponent(appName, () => App);

@@ -19,6 +19,7 @@ import {
 } from '@stream-io/video-react-native-sdk';
 import useAuthStore from 'app/store/authStore';
 import InCallScreen from 'app/screen/Call/InCallScreen';
+import ResetPassword from 'app/screen/Menu/ResetPassword';
 
 const chatClient = StreamChat.getInstance(chatApiKey);
 
@@ -65,6 +66,7 @@ const MainNavigator = () => {
             <Stack.Screen name="ChannelScreen" component={ChannelScreen} />
             <Stack.Screen name="CallScreen" component={CallScreen} />
             <Stack.Screen name="InCallScreen" component={InCallScreen} />
+            <Stack.Screen name="ResetPassword" component={ResetPassword} />
           </Stack.Navigator>
         </StreamVideo>
       </Chat>

@@ -23,7 +23,7 @@ export default function () {
     shallow,
   );
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const init = async () => {
     await requestNotifications(['alert', 'sound']);
@@ -35,12 +35,11 @@ export default function () {
         dispatchUser({
           ...resUser,
         });
-        // AsyncStorage.setItem('id', resUser.id);
       }
       messaging()
         .subscribeToTopic(uid)
         .then(() => console.log('Subscribed to topic: ' + uid));
-    } else {
+
       setIsLoading(false);
     }
   };
