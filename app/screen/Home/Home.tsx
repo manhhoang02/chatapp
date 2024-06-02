@@ -9,6 +9,7 @@ import React from 'react';
 import {StyleSheet} from 'react-native';
 import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
 import HomeHeader from './container/Home.Header';
+
 export default function () {
   const user = useAuthStore(s => s.user);
 

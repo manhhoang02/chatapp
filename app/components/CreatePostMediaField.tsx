@@ -113,6 +113,7 @@ export function MediaItem({
     return (
       <Video
         controls={controls}
+        muted={!controls}
         source={{
           uri: uri,
         }}

@@ -30,14 +30,13 @@ export function ChannelScreen({
 
   const handleCall = async () => {
     if (client) {
-      const call = await client.call(callType, callId).getOrCreate({
+      await client.call(callType, callId).getOrCreate({
         ring: true,
         data: {
           members: members,
         },
       });
-      console.log(call.duration, 'call');
-      navigation.navigate('CallScreen');
+      // navigation.navigate('CallScreen');
     }
   };
 

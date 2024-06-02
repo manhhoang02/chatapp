@@ -1,67 +1,61 @@
-import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import React, {useCallback, useEffect} from 'react';
+import {Alert, SafeAreaView, StyleSheet} from 'react-native';
 import {
+  Call,
   CallingState,
-  IncomingCall,
-  OutgoingCall,
+  RingingCallContent,
   StreamCall,
   useCalls,
 } from '@stream-io/video-react-native-sdk';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {ParamsStack} from 'app/navigation/params';
-import {consoleLog} from '@abong.code/helpers/logHelper';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
-export default function ({
-  navigation,
-}: NativeStackScreenProps<ParamsStack, 'CallScreen'>) {
+export default function () {
+  const {top} = useSafeAreaInsets();
   const calls = useCalls();
-  const streamCall = calls[0];
 
-  const onRejectCallHandler = () => {
-    navigation.goBack();
-  };
+  const handleMoreCalls = useCallback(async () => {
+    const lastCallCreatedBy = calls[1]?.state.createdBy;
+    Alert.alert(
+      `Incoming call from ${
+        lastCallCreatedBy?.name ?? lastCallCreatedBy?.id
+      }, only 1 call at a time is supported`,
+    );
+  }, [calls]);
 
-  let callUI = null;
+  // Reset the state of the show variable when there are no calls.
+  useEffect(() => {
+    if (calls.length > 1) {
+      handleMoreCalls();
+    }
+  }, [calls.length, handleMoreCalls]);
 
-  // handle incoming ring calls
-  const incomingCalls = calls.filter(
-    call =>
-      call.isCreatedByMe === false &&
-      call.state.callingState === CallingState.RINGING,
-  );
+  const firstCall = calls[0];
 
-  const [incomingCall] = incomingCalls;
-  if (incomingCall) {
-    // render the incoming call UI
-    callUI = <IncomingCall onRejectCallHandler={onRejectCallHandler} />;
+  if (!firstCall) {
+    return null;
   }
-
-  // handle outgoing ring calls
-  const outgoingCalls = calls.filter(
-    call =>
-      call.isCreatedByMe === true &&
-      call.state.callingState === CallingState.RINGING,
-  );
-
-  const [outgoingCall] = outgoingCalls;
-  if (outgoingCall) {
-    // render the outgoing call UI
-    callUI = <OutgoingCall onHangupCallHandler={onRejectCallHandler} />;
-  }
-
-  // Wrap the call UI in a StreamCall component
-  if (streamCall) {
-    callUI = <StreamCall call={streamCall}>{callUI}</StreamCall>;
-  }
-
-  consoleLog(calls, 'callUI');
 
   return (
-    // <StreamCall call={streamCall}>
-    <View style={styles.container}>{callUI}</View>
-    // </StreamCall>
+    <StreamCall call={firstCall}>
+      <CallLeaveOnUnmount call={firstCall} />
+      <SafeAreaView style={[styles.container, {top}]}>
+        <RingingCallContent />
+      </SafeAreaView>
+    </StreamCall>
   );
 }
+
+const CallLeaveOnUnmount = ({call}: {call: Call}) => {
+  useEffect(() => {
+    return () => {
+      if (call && call.state.callingState !== CallingState.LEFT) {
+        call.leave();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+};
 
 const styles = StyleSheet.create({
   text: {
@@ -71,8 +65,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    textAlign: 'center',
+    ...StyleSheet.absoluteFillObject,
   },
 });

@@ -15,7 +15,7 @@ export function setPushConfig() {
     },
     android: {
       // add your push_provider_name for Android that you have setup in Stream dashboard
-      pushProviderName: 'rn-fcm-video',
+      pushProviderName: 'funchat',
       // configure the notification channel to be used for incoming calls for Android.
       callChannel: {
         id: 'stream_call_notifications',
@@ -30,24 +30,24 @@ export function setPushConfig() {
         // This will ensure that the notification will appear on-top-of applications.
         importance: AndroidImportance.HIGH,
         // optional: if you dont pass a sound, default ringtone will be used
-        // sound: <your sound url>
+        sound: 'default',
       },
       // configure the functions to create the texts shown in the notification
       // for incoming calls in Android.
       incomingCallNotificationTextGetters: {
         getTitle: (createdUserName: string) =>
-          `Incoming call from ${createdUserName}`,
-        getBody: (_createdUserName: string) => 'Tap to answer the call',
+          `Bạn có cuộc gọi từ ${createdUserName}`,
+        getBody: (_createdUserName: string) => 'Nhấn để trả lời cuộc gọi',
       },
     },
     // add the callback to be executed a call is accepted, used for navigation
     navigateAcceptCall: () => {
-      staticNavigate({name: 'CallScreen', params: undefined});
+      staticNavigate({name: 'InCallScreen', params: undefined});
     },
     // add the callback to be executed when a notification is tapped,
     // but the user did not press accept or decline, used for navigation
     navigateToIncomingCall: () => {
-      staticNavigate({name: 'CallScreen', params: undefined});
+      staticNavigate({name: 'InCallScreen', params: undefined});
     },
     // add the async callback to create a video client
     // for incoming calls in the background on a push notification

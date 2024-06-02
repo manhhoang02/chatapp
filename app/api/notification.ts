@@ -7,9 +7,11 @@ import useAuthStore from 'app/store/authStore';
 import moment from 'moment';
 
 export const getAccessToken = async () => {
-  const HOST = '192.168.1.5';
+  // const HOST = '192.168.1.7';
+  const API = 'https://server-funchat.onrender.com/access-token';
   try {
-    const response = await axios.get(`http://${HOST}:3000/access-token`);
+    // const response = await axios.get(`http://${HOST}:3000/access-token`);
+    const response = await axios.get(API);
     return response.data.access_token;
   } catch (error) {
     console.error('Error fetching access token:', error);

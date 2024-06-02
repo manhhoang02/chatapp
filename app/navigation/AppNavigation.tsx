@@ -12,10 +12,15 @@ import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
 import {ChatProvider} from 'app/components/chat/ChatContext';
 import {useChatClient} from 'app/hook/useChatClient';
-import useFirebaseNotification from 'app/hook/useFirebaseNotification';
+import useFirebaseNotification, {
+  handlePushEvent,
+} from 'app/hook/useFirebaseNotification';
 import messaging from '@react-native-firebase/messaging';
 import {navigationRef} from 'app/utils/staticNavigation';
 import {requestNotifications} from 'react-native-permissions';
+import notifee from '@notifee/react-native';
+
+notifee.onBackgroundEvent(handlePushEvent);
 
 export default function () {
   const [user, dispatchUser] = useAuthStore(

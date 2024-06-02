@@ -64,10 +64,10 @@ const MainNavigator = () => {
             <Stack.Screen name="Profile" component={Profile} />
             <Stack.Screen name="FriendRequests" component={FriendRequests} />
             <Stack.Screen name="ChannelScreen" component={ChannelScreen} />
-            <Stack.Screen name="CallScreen" component={CallScreen} />
             <Stack.Screen name="InCallScreen" component={InCallScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
           </Stack.Navigator>
+          <CallScreen />
         </StreamVideo>
       </Chat>
     </OverlayProvider>
