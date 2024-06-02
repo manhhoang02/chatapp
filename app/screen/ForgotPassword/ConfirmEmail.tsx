@@ -23,7 +23,11 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import auth from '@react-native-firebase/auth';
 
-export default function () {
+interface Props {
+  title?: string;
+}
+
+export default function ({title}: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
   const insets = useSafeAreaInsets();
 
@@ -65,7 +69,9 @@ export default function () {
           <Ionicons name="arrow-back-outline" size={24} color={color.primary} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, styles.mb20]}>Quên mật khẩu?</Text>
+        <Text style={[styles.title, styles.mb20]}>
+          {title ?? 'Quên mật khẩu?'}
+        </Text>
 
         <Text style={styles.desc}>
           Nhập email của bạn và chúng tôi sẽ gửi cho bạn{'\n'}hướng dẫn về cách

@@ -5,7 +5,6 @@ import {Post} from 'app/api/post.type';
 import React, {useRef, useState} from 'react';
 import {
   Alert,
-  ImageBackground,
   Share,
   StyleSheet,
   Text,
@@ -28,6 +27,8 @@ import {size} from 'lodash';
 import ModalPostActions from './modals/ModalPostActions';
 import {useGetUserById} from 'app/api/auth';
 import useAuthStore from 'app/store/authStore';
+import {MediaItem} from './CreatePostMediaField';
+import ModalViewMedia from './modals/ModalViewMedia';
 
 interface Props {
   item: Post;
@@ -49,11 +50,9 @@ export default function (props: Props) {
     item.users_liked.length || 0,
   );
   const [needReload, setNeedReload] = useState(0);
-  const [postId, setPostId] = useState('');
+  const [showView, setShowView] = useState(false);
 
   const {data: author} = useGetUserById(item.author);
-
-  console.log(postId, 'postId');
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -66,9 +65,8 @@ export default function (props: Props) {
   };
 
   const handleComment = () => {
-    // commentSheetRef.current?.present();
-    setPostId(item.id);
     setNeedReload(moment().unix());
+    commentSheetRef.current?.present();
   };
 
   const handleOptions = () => {
@@ -127,11 +125,8 @@ export default function (props: Props) {
         )}
 
         {item.files && size(item.files) > 0 && (
-          <Pressable style={AppStyles.fill}>
-            <ImageBackground
-              source={{uri: item.files[0]}}
-              style={styles.image}
-              resizeMode="cover">
+          <Pressable style={AppStyles.fill} onPress={() => setShowView(true)}>
+            <View style={styles.dots}>
               {item.files.length > 1 ? (
                 <View style={styles.blur}>
                   {item.files.map((_, index) => {
@@ -148,7 +143,12 @@ export default function (props: Props) {
                   })}
                 </View>
               ) : null}
-            </ImageBackground>
+            </View>
+            <MediaItem
+              file={item.files[0]}
+              style={styles.image}
+              controls={false}
+            />
           </Pressable>
         )}
 
@@ -166,10 +166,6 @@ export default function (props: Props) {
             <IconComments width={20} />
             <Text style={styles.btnText}>Bình luận</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity style={AppStyles.rowCenter}>
-            <IconSend width={20} />
-            <Text style={styles.btnText}>Gửi</Text>
-          </TouchableOpacity> */}
           <TouchableOpacity style={AppStyles.rowCenter} onPress={onShare}>
             <IconShare width={20} />
             <Text style={styles.btnText}>Chia sẻ</Text>
@@ -179,15 +175,27 @@ export default function (props: Props) {
 
       <ModalComment
         bottomRef={commentSheetRef}
-        postId={postId}
+        postId={item.id}
         needReload={needReload}
       />
       <ModalPostActions bottomRef={actionsSheetRef} item={item} />
+      <ModalViewMedia
+        data={item.files}
+        isVisible={showView}
+        onClose={() => setShowView(false)}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  dots: {
+    position: 'absolute',
+    zIndex: 1,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
   actionsField: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: color.primary,

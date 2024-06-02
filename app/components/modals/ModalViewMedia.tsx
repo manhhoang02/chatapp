@@ -9,16 +9,17 @@ import {MediaItem} from '../CreatePostMediaField';
 import AppConstant from '@abong.code/config/AppConstant';
 import AppStyles from 'elements/AppStyles';
 import {useHomeStore} from 'app/store/homeStore';
-import {shallow} from 'zustand/shallow';
+import {DocumentPickerResponse} from 'react-native-document-picker';
 
 type Props = {
   isVisible: boolean;
   onClose: () => void;
+  data?: DocumentPickerResponse[];
 };
-export default function ({isVisible, onClose}: Props) {
+export default function ({isVisible, onClose, data}: Props) {
   const {top, bottom} = useSafeAreaInsets();
 
-  const [post] = useHomeStore(s => [s.post], shallow);
+  const media = useHomeStore(s => s.post.media);
 
   return (
     <ReactNativeModal
@@ -30,7 +31,13 @@ export default function ({isVisible, onClose}: Props) {
       useNativeDriver
       style={styles.modal}>
       <View
-        style={[styles.container, {paddingBottom: bottom, paddingTop: top}]}>
+        style={[
+          styles.container,
+          {
+            paddingBottom: bottom,
+            paddingTop: top,
+          },
+        ]}>
         <AppBlock mb={12} style={styles.header}>
           <Ionicons
             name="arrow-back-outline"
@@ -38,23 +45,29 @@ export default function ({isVisible, onClose}: Props) {
             onPress={onClose}
             color={color.primary}
           />
-          <Text style={styles.textTitle}>Chỉnh sửa</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.doneText}>Xong</Text>
-          </TouchableOpacity>
+          {!data && (
+            <>
+              <Text style={styles.textTitle}>Chỉnh sửa</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={styles.doneText}>Xong</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </AppBlock>
 
         <FlatList
-          data={post.media}
+          data={data ?? media}
           renderItem={({item}) => (
             <AppBlock key={item.name + item.uri}>
               <MediaItem file={item} style={styles.media} />
-              <Ionicons
-                name="close"
-                size={30}
-                color={color.btnTwitter}
-                style={styles.icon}
-              />
+              {!data && (
+                <Ionicons
+                  name="close"
+                  size={30}
+                  color={color.btnTwitter}
+                  style={styles.icon}
+                />
+              )}
             </AppBlock>
           )}
           keyExtractor={(_, index) => index.toString()}
@@ -68,10 +81,11 @@ export default function ({isVisible, onClose}: Props) {
 const styles = StyleSheet.create({
   media: {
     width: AppConstant.SCREEN_WIDTH,
-    height: 400,
+    height: 300,
     marginBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  icon: {position: 'absolute', right: 8, top: 8},
+  icon: {position: 'absolute', right: 8, top: 0},
   doneText: {
     fontSize: 18,
     color: color.primary,

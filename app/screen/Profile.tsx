@@ -12,11 +12,12 @@ import {
   useGetUserById,
   useSendRequestFriend,
 } from 'app/api/auth';
-import {sendNotification} from 'app/api/notification';
 import {useGetUserPosts} from 'app/api/post';
 import {Post} from 'app/api/post.type';
 import ItemPost from 'app/components/ItemPost';
 import LinearAvatar from 'app/components/LinearAvatar';
+import {useChatContext} from 'app/components/chat/ChatContext';
+import {chatClient} from 'app/hook/useChatClient';
 import {useRefresh} from 'app/hook/useRefresh';
 import {ParamsStack} from 'app/navigation/params';
 import useAuthStore from 'app/store/authStore';
@@ -35,6 +36,7 @@ export default function ({
   const {user, dispatchUser} = useAuthStore();
   const dispatchSync = useHomeStore(s => s.dispatchSync);
   const {top} = useSafeAreaInsets();
+  const {setChannel} = useChatContext();
 
   const {data, refetch} = useGetUserById(route.params.id);
   const {data: userPosts} = useGetUserPosts({userId: route.params.id});
@@ -47,7 +49,7 @@ export default function ({
   const {mutate: sendR} = useSendRequestFriend();
   const {mutate: cancelR} = useCancelRequestFriend();
 
-  const onSuccess = (response: {message: string}) => {
+  const onSuccess = (response: any) => {
     showToastMessageSuccess('Thành công', response.message);
     getUserById(user.id).then(res => {
       dispatchUser({...user, ...res});
@@ -62,28 +64,14 @@ export default function ({
 
       if (!isFriend && !isSentFriendReq) {
         sendR(params, {
-          onSuccess: async response => {
-            onSuccess(response);
-            await sendNotification({
-              title: 'Thông báo kết bạn',
-              body: `${user.lastName} muốn kết bạn với bạn`,
-              topics: [data.id],
-            });
-          },
+          onSuccess,
           onError: () => {
             showToastMessageError('Thất bại', 'Không thể gửi lời mời');
           },
         });
       } else if (isFriendRequest) {
         acceptR(params, {
-          onSuccess: async response => {
-            onSuccess(response);
-            await sendNotification({
-              title: 'Thông báo kết bạn',
-              body: `${user.lastName} muốn kết bạn với bạn`,
-              topics: [data.id],
-            });
-          },
+          onSuccess,
           onError: () => {
             showToastMessageError('Lỗi', 'Đã xảy ra lỗi');
           },
@@ -99,7 +87,21 @@ export default function ({
     }
   };
 
-  const handleSendMsg = () => {};
+  const handleSendMsg = async () => {
+    if (data) {
+      if (!isFriend) {
+        showToastMessageError('Lỗi', 'Bạn cần kết bạn trước khi nhắn tin');
+        return;
+      }
+      const channel = chatClient.channel('messaging', {
+        members: [user.id, data.id],
+        name: data.firstName + ' ' + data.lastName,
+      });
+
+      setChannel(channel);
+      navigation.navigate('ChannelScreen');
+    }
+  };
   const renderItem = ({item}: {item: Post}) => {
     return <ItemPost item={item} />;
   };
@@ -160,15 +162,7 @@ export default function ({
             </TouchableOpacity>
           </View>
         )}
-        <Text
-          style={{
-            fontWeight: 'bold',
-            color: color.black,
-            fontSize: 16,
-            marginVertical: appSize(10),
-          }}>
-          Bài viết
-        </Text>
+        <Text style={styles.textPost}>Bài viết</Text>
         <View style={styles.container}>
           <FlatList
             refreshing={isRefreshing}
@@ -188,6 +182,12 @@ export default function ({
 }
 
 const styles = StyleSheet.create({
+  textPost: {
+    fontWeight: 'bold',
+    color: color.black,
+    fontSize: 16,
+    marginVertical: appSize(10),
+  },
   container: {
     flex: 1,
   },

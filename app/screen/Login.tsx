@@ -47,6 +47,7 @@ export default function () {
       .signInWithEmailAndPassword(email, password)
       .then(async res => {
         const uid = res.user.uid;
+
         if (uid) {
           const resUser = await getUserById(uid);
           if (resUser) {
@@ -54,6 +55,11 @@ export default function () {
               ...resUser,
             });
             AsyncStorage.setItem('id', resUser.id);
+            AsyncStorage.setItem(
+              '@userName',
+              `${resUser.firstName} ${resUser.lastName}`,
+            );
+            AsyncStorage.setItem('@userAvatar', resUser.avatar);
           }
 
           messaging()

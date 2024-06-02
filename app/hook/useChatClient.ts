@@ -16,6 +16,7 @@ export const useChatClient = () => {
         {
           id: currentUser.id,
           name: currentUser.firstName + ' ' + currentUser.lastName,
+          language: 'vi',
         },
         chatClient.devToken(currentUser.id),
       );

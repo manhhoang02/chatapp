@@ -1,8 +1,6 @@
 import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {ParamsStack} from 'app/navigation/params';
+import {TopTabScreenProps} from 'app/navigation/params';
 import React from 'react';
 import {Alert, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import BtnAction from './container/BtnAction';
@@ -15,12 +13,15 @@ import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
 import {disconnectChatUser} from 'app/hook/useChatClient';
 import messaging from '@react-native-firebase/messaging';
+import {
+  StreamVideoRN,
+  useStreamVideoClient,
+} from '@stream-io/video-react-native-sdk';
 
-export default function () {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<ParamsStack, 'TabScreen'>>();
+export default function ({navigation}: TopTabScreenProps<'Tab5'>) {
   const {bottom} = useSafeAreaInsets();
   const [user, signOut] = useAuthStore(s => [s.user, s.signOut], shallow);
+  const videoClient = useStreamVideoClient();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -37,6 +38,8 @@ export default function () {
           onPress: async () => {
             signOut();
             disconnectChatUser();
+            await StreamVideoRN.onPushLogout();
+            await videoClient?.disconnectUser();
             messaging()
               .unsubscribeFromTopic(user.id)
               .then(() =>
@@ -85,6 +88,7 @@ export default function () {
             />
           }
           text={'Đổi mật khẩu'}
+          onPress={() => navigation.navigate('ResetPassword')}
         />
         <BtnAction
           icon={

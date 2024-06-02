@@ -12,8 +12,15 @@ import useAuthStore from 'app/store/authStore';
 import {shallow} from 'zustand/shallow';
 import {ChatProvider} from 'app/components/chat/ChatContext';
 import {useChatClient} from 'app/hook/useChatClient';
-import useFirebaseNotification from 'app/hook/useFirebaseNotification';
+import useFirebaseNotification, {
+  handlePushEvent,
+} from 'app/hook/useFirebaseNotification';
 import messaging from '@react-native-firebase/messaging';
+import {navigationRef} from 'app/utils/staticNavigation';
+import {requestNotifications} from 'react-native-permissions';
+import notifee from '@notifee/react-native';
+
+notifee.onBackgroundEvent(handlePushEvent);
 
 export default function () {
   const [user, dispatchUser] = useAuthStore(
@@ -21,9 +28,11 @@ export default function () {
     shallow,
   );
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const init = async () => {
+    await requestNotifications(['alert', 'sound']);
+
     const uid = await AsyncStorage.getItem('id');
     if (uid) {
       const resUser = await getUserById(uid);
@@ -31,12 +40,11 @@ export default function () {
         dispatchUser({
           ...resUser,
         });
-        // AsyncStorage.setItem('id', resUser.id);
       }
       messaging()
         .subscribeToTopic(uid)
         .then(() => console.log('Subscribed to topic: ' + uid));
-    } else {
+
       setIsLoading(false);
     }
   };
@@ -58,7 +66,7 @@ export default function () {
 
   return (
     <ChatProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         {user.id ? <MainNavigator /> : <AuthNavigator />}
       </NavigationContainer>
     </ChatProvider>

@@ -18,8 +18,7 @@ type Props = {
 };
 export default function ({item}: Props) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<ParamsStack, 'TabScreen'>>();
+  const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
   const handleShowAction = () => {
     bottomSheetRef.current?.present();

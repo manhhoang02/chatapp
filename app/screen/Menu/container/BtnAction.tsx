@@ -5,10 +5,11 @@ import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 type Props = {
   icon: ReactNode;
   text: string;
+  onPress?: () => void;
 };
-const BtnAction = ({icon, text}: Props) => {
+const BtnAction = ({icon, text, onPress}: Props) => {
   return (
-    <TouchableOpacity style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.viewIcon}>{icon}</View>
       <Text style={styles.text}>{text}</Text>
     </TouchableOpacity>

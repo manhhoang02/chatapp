@@ -3,10 +3,10 @@ import {useChatContext} from 'app/components/chat/ChatContext';
 import {TopTabScreenProps} from 'app/navigation/params';
 import useAuthStore from 'app/store/authStore';
 import React, {useState} from 'react';
-import {ChannelAvatar, ChannelList} from 'stream-chat-react-native'; // Or stream-chat-expo
+import {ChannelList} from 'stream-chat-react-native'; // Or stream-chat-expo
 import ModalAddChat from './container/ModalAddChat';
 import AppStyles from 'elements/AppStyles';
-import {StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {StyleSheet, Text} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import color from '@abong.code/theme/color';
 import LinearAvatar from 'app/components/LinearAvatar';

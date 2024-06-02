@@ -19,14 +19,15 @@ export type ParamsStack = {
   FriendRequests: undefined;
   EmptyScreen1: undefined;
   ChannelScreen: undefined;
+  CallScreen: undefined;
+  InCallScreen: undefined;
+  ResetPassword: undefined;
 };
 export type ParamsAuth = {
   SplashScreen: undefined;
   Login: undefined;
   ConfirmEmail: undefined;
   Register: undefined;
-  ConfirmOTP: {email: string};
-  ResetPassword: {email: string};
 };
 
 export type TopTabScreenProps<T extends keyof ParamsTopTab> =

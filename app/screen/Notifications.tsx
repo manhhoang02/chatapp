@@ -1,16 +1,35 @@
-import {FlatList, StyleSheet, Text, View} from 'react-native';
+import {Alert, FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import color from '@abong.code/theme/color';
 import {AppBlock, AppText, appSize} from '@starlingtech/element';
 import moment from 'moment';
 import AppStyles from 'elements/AppStyles';
-import {useGetNotifications} from 'app/api/notification';
+import {deleteNotification, useGetNotifications} from 'app/api/notification';
 import {useRefresh} from 'app/hook/useRefresh';
+import {showToastMessageSuccess} from '@abong.code/helpers/messageHelper';
 
 export default function Notifications() {
   const {data: notifications, refetch} = useGetNotifications();
 
   const {isRefreshing, onRefresh} = useRefresh(refetch);
+
+  const onDeleteNotification = (id: string) => {
+    Alert.alert('Xác nhận', 'Bạn có chắc chắn muốn xóa thông báo này?', [
+      {
+        text: 'Hủy',
+        style: 'cancel',
+      },
+      {
+        text: 'Xóa',
+        onPress: () => {
+          deleteNotification(id).then(() => {
+            showToastMessageSuccess('Xóa thông báo thành công');
+            onRefresh();
+          });
+        },
+      },
+    ]);
+  };
 
   return (
     <View style={styles.container}>
@@ -21,7 +40,9 @@ export default function Notifications() {
         data={notifications}
         renderItem={({item}) => {
           return (
-            <AppBlock style={styles.item}>
+            <Pressable
+              style={styles.item}
+              onLongPress={() => onDeleteNotification(item.id)}>
               <AppText weight="700">{item.title}</AppText>
               <AppBlock style={AppStyles.rowCenterBetween}>
                 <AppText size={13} color="backdrop">
@@ -29,7 +50,7 @@ export default function Notifications() {
                 </AppText>
                 <AppText size={11}>{moment(item.time).fromNow(true)}</AppText>
               </AppBlock>
-            </AppBlock>
+            </Pressable>
           );
         }}
         keyExtractor={item => item.id}

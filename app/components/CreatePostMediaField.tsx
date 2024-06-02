@@ -6,28 +6,27 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {DocumentPickerResponse} from 'react-native-document-picker';
 import {size} from 'lodash';
 import {AppBlock, AppText} from '@starlingtech/element';
 import AppConstant from '@abong.code/config/AppConstant';
 import Video from 'react-native-video';
 import ModalViewMedia from './modals/ModalViewMedia';
+import {useHomeStore} from 'app/store/homeStore';
+import {getImageByPath} from 'helper/uploadToCloudStorage';
 
-interface Props {
-  files: DocumentPickerResponse[];
-}
-
-export default function CreatePostMediaField({files}: Props) {
+export default function CreatePostMediaField() {
+  const media = useHomeStore(s => s.post.media);
   const [show, setShow] = useState(false);
 
   const FILES = useMemo(() => {
-    const row1 = files.slice(0, 2);
-    const row2 = files.slice(2, 5);
-    const left = files.slice(5);
+    const row1 = media.slice(0, 2);
+    const row2 = media.slice(2, 5);
+    const left = media.slice(5);
 
     return {row1, row2, left};
-  }, [files]);
+  }, [media]);
 
   const {row1, row2, left} = FILES;
   return (
@@ -71,15 +70,36 @@ interface ItemProps {
   isLast?: boolean;
   style?: StyleProp<ViewStyle>;
   left?: number;
+  controls?: boolean;
 }
-export function MediaItem({file, isLast = false, style, left}: ItemProps) {
+export function MediaItem({
+  file,
+  isLast = false,
+  style,
+  left,
+  controls = true,
+}: ItemProps) {
+  const [uri, setUri] = useState('');
+
+  useEffect(() => {
+    const getUri = async () => {
+      const path = await getImageByPath(file);
+      setUri(path);
+    };
+    getUri();
+  }, [file]);
+
+  if (!uri) {
+    return null;
+  }
+
   if (file.type === 'image/jpeg' || file.type === 'image/png') {
     return (
       <ImageBackground
         key={file.name + file.uri}
-        source={{uri: file.uri}}
+        source={{uri: uri}}
         style={style}
-        resizeMode="cover">
+        resizeMode="contain">
         {isLast ? (
           <View style={styles.last}>
             <AppText size={30} weight="600" color="white">
@@ -92,12 +112,13 @@ export function MediaItem({file, isLast = false, style, left}: ItemProps) {
   } else {
     return (
       <Video
-        controls
+        controls={controls}
+        muted={!controls}
         source={{
-          uri: file.uri,
+          uri: uri,
         }}
         style={style}
-        resizeMode={'cover'}
+        resizeMode={'contain'}
       />
     );
   }

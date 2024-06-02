@@ -7,10 +7,14 @@ export const getStreamAvatar = (channel: any) => {
 
   let shortenName = '';
 
-  if (initials.length < 2) {
-    shortenName = initials[0];
+  if (/\d$/.test(channelName)) {
+    shortenName = `${initials[0]}+${initials[initials.length - 2]}`;
   } else {
-    shortenName = `${initials[0]}+${initials[initials.length - 1]}`;
+    if (initials.length < 2) {
+      shortenName = initials[0];
+    } else {
+      shortenName = `${initials[0]}+${initials[initials.length - 1]}`;
+    }
   }
 
   const avatar = `https://getstream.io/random_png/?name=${shortenName}`;

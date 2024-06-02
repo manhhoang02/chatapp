@@ -5,9 +5,11 @@
 import {AppRegistry} from 'react-native';
 import App from './App';
 import {name as appName} from './app.json';
-import notifee from '@notifee/react-native';
-import {handlePushEvent} from 'app/hook/useFirebaseNotification';
+import messaging from '@react-native-firebase/messaging';
+import {displayNotification} from 'app/hook/useFirebaseNotification';
+import {setPushConfig} from 'app/utils/setPushConfig';
 
-notifee.onBackgroundEvent(handlePushEvent);
+messaging().setBackgroundMessageHandler(displayNotification);
 
+setPushConfig();
 AppRegistry.registerComponent(appName, () => App);
