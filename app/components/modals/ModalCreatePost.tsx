@@ -17,12 +17,13 @@ import {AppText} from '@starlingtech/element';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import CreatePostMediaField from '../CreatePostMediaField';
 import AppStyles from 'elements/AppStyles';
-import {useHomeStore} from 'app/store/homeStore';
+import {MediaType, useHomeStore} from 'app/store/homeStore';
 import {shallow} from 'zustand/shallow';
 import moment from 'moment';
 import useAuthStore from 'app/store/authStore';
 import {useCreatePost, useEditPost} from 'app/api/post';
-import {FileType, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
+import {getImagePath, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
+import {launchCamera} from 'helper/launchCamera';
 
 export default function () {
   const user = useAuthStore(s => s.user);
@@ -50,28 +51,24 @@ export default function () {
     dispatchPost({visible: false, media: [], data: undefined});
   };
 
-  const handleUploadToCloudStorage = () => {
-    post.media.map(async file => {
-      const fileType: FileType = {
-        uri: file.uri,
-        name: file.name || '',
-      };
-      return await uploadToCloudStorage(fileType);
-    });
-  };
-
   const handleCreatePost = async () => {
+    const files = await Promise.all(
+      post.media.map(async file => ({
+        uri: await getImagePath(file),
+        name: file.name,
+      })),
+    );
+
     if (post.data) {
       editPost(
         {
           postId: post.data.id,
           description,
-          files: post.media,
+          files: files,
         },
         {
           onSuccess: async res => {
             showToastMessageSuccess(res.message);
-            handleUploadToCloudStorage();
             dispatchSync({post: moment().unix()});
             onClose();
           },
@@ -86,12 +83,11 @@ export default function () {
       {
         author: user.id,
         description,
-        files: post.media,
+        files: files,
       },
       {
         onSuccess: res => {
           showToastMessageSuccess(res.message);
-          handleUploadToCloudStorage();
           dispatchSync({post: moment().unix()});
           onClose();
         },
@@ -109,13 +105,37 @@ export default function () {
         type: [DocumentPicker.types.video, DocumentPicker.types.images],
       });
 
-      dispatchPost({media: results});
+      const media: MediaType[] = results.map(file => {
+        return {uri: file.uri, name: file.name || ''};
+      });
+
+      media.map(async file => {
+        return await uploadToCloudStorage(file);
+      });
+
+      dispatchPost({media});
     } catch (error) {
       if (DocumentPicker.isCancel(error)) {
       } else {
         throw error;
       }
     }
+  };
+
+  const handleLaunchCamera = () => {
+    launchCamera().then(async image => {
+      if (image) {
+        const fileName = image.path.substring(image.path.lastIndexOf('/') + 1);
+        const newImage: MediaType = {
+          uri: image.path,
+          name: fileName,
+        };
+
+        await uploadToCloudStorage(newImage);
+
+        dispatchPost({media: [newImage]});
+      }
+    });
   };
 
   const inputHeight = post.media.length > 0 ? 55 : '45%';
@@ -191,7 +211,9 @@ export default function () {
               Thêm ảnh/video
             </AppText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.btnUploadFile}>
+          <TouchableOpacity
+            style={styles.btnUploadFile}
+            onPress={handleLaunchCamera}>
             <Ionicons name="camera-outline" size={26} color={color.primary} />
             <AppText size={16} ml={12}>
               Camera

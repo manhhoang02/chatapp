@@ -1,9 +1,13 @@
 import {Post} from 'app/api/post.type';
-import {DocumentPickerResponse} from 'react-native-document-picker';
 import {createWithEqualityFn} from 'zustand/traditional';
 
+export type MediaType = {
+  uri: string;
+  name: string;
+};
+
 type PostType = {
-  media: DocumentPickerResponse[];
+  media: MediaType[];
   visible: boolean;
   data?: Post;
 };

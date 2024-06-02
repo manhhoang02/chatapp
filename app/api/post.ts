@@ -4,8 +4,8 @@ import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
 import {getUserById} from './auth';
 import {sendNotification} from './notification';
-import {DocumentPickerResponse} from 'react-native-document-picker';
 import moment from 'moment';
+import {MediaType} from 'app/store/homeStore';
 
 type ParamsGetPosts = {
   reload?: number;
@@ -55,7 +55,7 @@ export const useGetPostById = (postId: string, reload?: number) => {
 
 type CreatePostParams = {
   author: string;
-  files: DocumentPickerResponse[];
+  files: MediaType[];
   description: string;
 };
 
@@ -160,7 +160,7 @@ export const useEditPost = () => {
     async (params: {
       postId: string;
       description?: string;
-      files?: DocumentPickerResponse[];
+      files?: MediaType[];
     }) => {
       const postReference = firestore().doc(
         `${COLLECTION.POSTS}/${params.postId}`,

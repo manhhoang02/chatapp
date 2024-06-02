@@ -1,12 +1,7 @@
 import storage from '@react-native-firebase/storage';
-import {DocumentPickerResponse} from 'react-native-document-picker';
+import {MediaType} from 'app/store/homeStore';
 
-export interface FileType {
-  uri: string;
-  name?: string;
-}
-
-export const uploadToCloudStorage = async (file: FileType) => {
+export const uploadToCloudStorage = async (file: MediaType) => {
   const {uri, name} = file;
   const fileName = name || uri.substring(uri.lastIndexOf('/') + 1);
   const filePath = `media/${fileName}`; // Add the folder path
@@ -17,16 +12,6 @@ export const uploadToCloudStorage = async (file: FileType) => {
   // Upload the file
   const task = storageRef.putFile(uri);
 
-  // Monitor the upload status
-  task.on('state_changed', snapshot => {
-    console.log(
-      'Uploading:',
-      snapshot.bytesTransferred,
-      '/',
-      snapshot.totalBytes,
-    );
-  });
-
   await task;
 
   // Get the download URL
@@ -34,37 +19,17 @@ export const uploadToCloudStorage = async (file: FileType) => {
   return {uri: downloadURL, name: fileName};
 };
 
-export const getImageByPath = async (
-  file: DocumentPickerResponse,
-): Promise<string> => {
-  try {
-    // Extract the filename from the given path
-    const fileName = file.uri.substring(file.uri.lastIndexOf('/') + 1);
+export const getImagePath = async (file: MediaType): Promise<string> => {
+  // Extract the filename from the given path
 
-    let type = '';
-    switch (file.type) {
-      case 'image/jpeg':
-        type = 'jpg';
-        break;
-      case 'image/png':
-        type = 'png';
-        break;
-      case 'video/mp4':
-        type = 'mp4';
-        break;
-    }
+  // Construct the full path in Firebase Storage
+  const filePath = `media/${file.name}`;
 
-    // Construct the full path in Firebase Storage
-    const filePath = `media/${fileName}.${type}`;
+  // Create a reference to the file in Firebase Storage
+  const storageRef = storage().ref(filePath);
 
-    // Create a reference to the file in Firebase Storage
-    const storageRef = storage().ref(filePath);
+  // Get the download URL
+  const downloadURL = storageRef.getDownloadURL();
 
-    // Get the download URL
-    const downloadURL = storageRef.getDownloadURL();
-
-    return downloadURL;
-  } catch (error: any) {
-    throw new Error(`Failed to get image: ${error.message}`);
-  }
+  return downloadURL;
 };

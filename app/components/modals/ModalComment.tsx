@@ -36,7 +36,7 @@ type Props = {
 };
 
 export default function ({bottomRef, postId, needReload}: Props) {
-  const {user} = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const {bottom} = useSafeAreaInsets();
 
   const [comment, setComment] = useState('');

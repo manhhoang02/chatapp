@@ -1,22 +1,19 @@
 if (__DEV__) {
-  import('./abong.code/config/ReactotronConfig').then(() =>
-    console.log('Reactotron Configured'),
-  );
+  import('./abong.code/config/ReactotronConfig');
 }
 
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import AppNavigation from 'app/navigation/AppNavigation';
 import AppProvider from '@abong.code/context/AppProvider';
 import 'react-native-gesture-handler';
-import {ActivityIndicator, StatusBar, View} from 'react-native';
+import {StatusBar} from 'react-native';
 import moment from 'moment';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SplashScreen from 'app/screen/Splash/SplashScreen';
-import AppStyles from 'elements/AppStyles';
-import color from '@abong.code/theme/color';
 import {useGlobalStore} from 'app/store/globalStore';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
+import {shallow} from 'zustand/shallow';
 
 moment.locale('vi');
 moment.updateLocale('vi', {
@@ -24,12 +21,10 @@ moment.updateLocale('vi', {
 });
 
 const App = () => {
-  const [isFirstTime, dispatchIsFirstTime] = useGlobalStore(s => [
-    s.isFirstTime,
-    s.dispatchIsFirstTime,
-  ]);
-
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFirstTime, dispatchIsFirstTime] = useGlobalStore(
+    s => [s.isFirstTime, s.dispatchIsFirstTime],
+    shallow,
+  );
 
   useEffect(() => {
     const checkFirstTime = async () => {
@@ -41,24 +36,14 @@ const App = () => {
         } else {
           dispatchIsFirstTime(false);
         }
-        setIsLoading(false);
       } catch (error) {
         console.log('Error checking first time:', error);
-        setIsLoading(false);
       }
     };
 
     checkFirstTime();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  if (isLoading) {
-    return (
-      <View style={[AppStyles.center, AppStyles.fill]}>
-        <ActivityIndicator color={color.primary} />
-      </View>
-    );
-  }
 
   return (
     <AppProvider>

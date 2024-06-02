@@ -28,12 +28,16 @@ import {FlatList, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import {View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {shallow} from 'zustand/shallow';
 
 export default function ({
   navigation,
   route,
 }: NativeStackScreenProps<ParamsStack, 'Profile'>) {
-  const {user, dispatchUser} = useAuthStore();
+  const [user, dispatchUser] = useAuthStore(
+    s => [s.user, s.dispatchUser],
+    shallow,
+  );
   const dispatchSync = useHomeStore(s => s.dispatchSync);
   const {top} = useSafeAreaInsets();
   const {setChannel} = useChatContext();
