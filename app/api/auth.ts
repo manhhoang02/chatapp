@@ -3,6 +3,10 @@ import {Resp_User} from './auth.type';
 import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
 import {sendNotification} from './notification';
+import {
+  showToastMessageError,
+  showToastMessageSuccess,
+} from '@abong.code/helpers/messageHelper';
 
 export type FriendParams = {
   userId: string;
@@ -177,8 +181,10 @@ export const getUserById = (userId: string): Promise<Resp_User> => {
     });
 };
 
-export const useGetUserById = (userId: string) => {
-  return useQuery(['GET-USER-BY_ID', userId], () => getUserById(userId));
+export const useGetUserById = (userId: string, reload?: number) => {
+  return useQuery(['GET-USER-BY_ID', userId, reload], () =>
+    getUserById(userId),
+  );
 };
 
 type GetFriendsParams = {
@@ -275,6 +281,28 @@ export const useDeleteFriend = () => {
         friends: friends.filter(requestId => requestId !== userId),
       });
       return {message: 'Đã xóa bạn bè'};
+    },
+  );
+};
+type EditProfleParams = {
+  userId: string;
+  data: Partial<Resp_User>;
+};
+
+export const useEditProfile = () => {
+  return useMutation(
+    async (params: EditProfleParams): Promise<{message: string}> => {
+      const userRef = firestore().doc(`${COLLECTION.USERS}/${params.userId}`);
+      await userRef.update(params.data);
+      return {message: 'Cập nhật thành công'};
+    },
+    {
+      onSuccess: res => {
+        showToastMessageSuccess('Thành công', res.message);
+      },
+      onError: () => {
+        showToastMessageError('Thất bại', 'Cập nhật thông tin thất bại');
+      },
     },
   );
 };

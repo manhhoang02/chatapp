@@ -77,7 +77,7 @@ export function MediaItem({
   left,
   controls = true,
 }: ItemProps) {
-  if (!file) {
+  if (!file.uri) {
     return null;
   }
 
@@ -107,6 +107,7 @@ export function MediaItem({
         }}
         style={style as any}
         resizeMode={'contain'}
+        repeat
       />
     );
   }

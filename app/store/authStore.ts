@@ -6,14 +6,14 @@ import {Resp_User} from 'app/api/auth.type';
 
 type AuthStore = {
   user: Resp_User;
-  dispatchUser: (user: Resp_User) => void;
+  dispatchUser: (user: Partial<Resp_User>) => void;
   signOut: () => void;
 };
 
 const useAuthStore = createWithEqualityFn<AuthStore>()(
   immer(set => ({
     user: {} as Resp_User,
-    dispatchUser: user => set({user}),
+    dispatchUser: user => set(state => ({user: {...state.user, ...user}})),
     signOut: () =>
       set(state => {
         auth().signOut();

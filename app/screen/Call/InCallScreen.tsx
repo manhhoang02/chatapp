@@ -8,9 +8,15 @@ export default function InCallScreen() {
   const calls = useCalls();
   const firstCall = calls[0];
 
+  const run = async () => {
+    // await firstCall.leave();
+    await firstCall.endCall();
+    goBack();
+  };
+
   useEffect(() => {
     if (!firstCall) {
-      goBack();
+      run();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstCall]);

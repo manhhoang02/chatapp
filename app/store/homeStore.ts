@@ -16,7 +16,7 @@ type SyncType = {
   post: number;
   friend: number;
   chat: number;
-  liked: number;
+  profile: number;
 };
 
 type State = {
@@ -31,7 +31,7 @@ export const useHomeStore = createWithEqualityFn<State>(set => ({
     post: 0,
     friend: 0,
     chat: 0,
-    liked: 0,
+    profile: 0,
   },
   post: {
     media: [],
