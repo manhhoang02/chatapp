@@ -25,7 +25,7 @@ type Props = {
 
 export default function ({isVisible, onClose}: Props) {
   const {top} = useSafeAreaInsets();
-  const {user} = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
   const [search, setSearch] = useState('');

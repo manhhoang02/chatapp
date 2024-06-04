@@ -59,6 +59,11 @@ export default function ({bottomRef, item}: Props) {
       dispatchPost({visible: true, data: item, media: item.files});
     }, 200);
   };
+
+  if (item.author !== userId) {
+    return null;
+  }
+
   return (
     <BottomSheetContainer bottomRef={bottomRef} snapPoints={['18%']}>
       <AppBlock flex ph={12}>

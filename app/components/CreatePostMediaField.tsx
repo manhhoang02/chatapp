@@ -6,15 +6,13 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import React, {useEffect, useMemo, useState} from 'react';
-import {DocumentPickerResponse} from 'react-native-document-picker';
+import React, {useMemo, useState} from 'react';
 import {size} from 'lodash';
 import {AppBlock, AppText} from '@starlingtech/element';
 import AppConstant from '@abong.code/config/AppConstant';
 import Video from 'react-native-video';
 import ModalViewMedia from './modals/ModalViewMedia';
-import {useHomeStore} from 'app/store/homeStore';
-import {getImageByPath} from 'helper/uploadToCloudStorage';
+import {MediaType, useHomeStore} from 'app/store/homeStore';
 
 export default function CreatePostMediaField() {
   const media = useHomeStore(s => s.post.media);
@@ -66,7 +64,7 @@ export default function CreatePostMediaField() {
 }
 
 interface ItemProps {
-  file: DocumentPickerResponse;
+  file: MediaType;
   isLast?: boolean;
   style?: StyleProp<ViewStyle>;
   left?: number;
@@ -79,25 +77,15 @@ export function MediaItem({
   left,
   controls = true,
 }: ItemProps) {
-  const [uri, setUri] = useState('');
-
-  useEffect(() => {
-    const getUri = async () => {
-      const path = await getImageByPath(file);
-      setUri(path);
-    };
-    getUri();
-  }, [file]);
-
-  if (!uri) {
+  if (!file.uri) {
     return null;
   }
 
-  if (file.type === 'image/jpeg' || file.type === 'image/png') {
+  if (file.name.includes('jpg') || file.name.includes('png')) {
     return (
       <ImageBackground
         key={file.name + file.uri}
-        source={{uri: uri}}
+        source={{uri: file.uri}}
         style={style}
         resizeMode="contain">
         {isLast ? (
@@ -115,10 +103,11 @@ export function MediaItem({
         controls={controls}
         muted={!controls}
         source={{
-          uri: uri,
+          uri: file.uri,
         }}
-        style={style}
+        style={style as any}
         resizeMode={'contain'}
+        repeat
       />
     );
   }

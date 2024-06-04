@@ -83,6 +83,7 @@ export default function () {
             createdAt: new Date(),
             updatedAt: new Date(),
             avatar: avt,
+            background: '',
             friends: [],
             sent_friend_requests: [],
             friend_requests: [],

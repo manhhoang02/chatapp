@@ -1,4 +1,4 @@
-import {create} from 'zustand';
+import {createWithEqualityFn} from 'zustand/traditional';
 
 export enum COLLECTION {
   USERS = 'users',
@@ -14,7 +14,7 @@ type State = {
   dispatchIsFirstTime: (p: boolean) => void;
 };
 
-export const useGlobalStore = create<State>(set => ({
+export const useGlobalStore = createWithEqualityFn<State>(set => ({
   isFirstTime: true,
   dispatchIsFirstTime: p => set({isFirstTime: p}),
 }));

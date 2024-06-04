@@ -8,13 +8,12 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {MediaItem} from '../CreatePostMediaField';
 import AppConstant from '@abong.code/config/AppConstant';
 import AppStyles from 'elements/AppStyles';
-import {useHomeStore} from 'app/store/homeStore';
-import {DocumentPickerResponse} from 'react-native-document-picker';
+import {MediaType, useHomeStore} from 'app/store/homeStore';
 
 type Props = {
   isVisible: boolean;
   onClose: () => void;
-  data?: DocumentPickerResponse[];
+  data?: MediaType[];
 };
 export default function ({isVisible, onClose, data}: Props) {
   const {top, bottom} = useSafeAreaInsets();

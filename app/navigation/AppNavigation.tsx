@@ -17,7 +17,6 @@ import useFirebaseNotification, {
 } from 'app/hook/useFirebaseNotification';
 import messaging from '@react-native-firebase/messaging';
 import {navigationRef} from 'app/utils/staticNavigation';
-import {requestNotifications} from 'react-native-permissions';
 import notifee from '@notifee/react-native';
 
 notifee.onBackgroundEvent(handlePushEvent);
@@ -30,25 +29,26 @@ export default function () {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  const init = async () => {
-    await requestNotifications(['alert', 'sound']);
-
-    const uid = await AsyncStorage.getItem('id');
-    if (uid) {
-      const resUser = await getUserById(uid);
-      if (resUser) {
-        dispatchUser({
-          ...resUser,
-        });
-      }
-      messaging()
-        .subscribeToTopic(uid)
-        .then(() => console.log('Subscribed to topic: ' + uid));
-
-      setIsLoading(false);
-    }
-  };
   useEffect(() => {
+    const init = async () => {
+      const uid = await AsyncStorage.getItem('id');
+      if (uid) {
+        const resUser = await getUserById(uid);
+        if (resUser) {
+          dispatchUser({
+            ...resUser,
+          });
+        }
+        messaging()
+          .subscribeToTopic(uid)
+          .then(() => console.log('Subscribed to topic: ' + uid));
+
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+      }
+    };
+
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

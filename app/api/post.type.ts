@@ -1,10 +1,10 @@
-import {DocumentPickerResponse} from 'react-native-document-picker';
+import {MediaType} from 'app/store/homeStore';
 
 export interface Post {
   id: string;
   author: string;
   description: string;
-  files: DocumentPickerResponse[];
+  files: MediaType[];
   users_liked: string[];
   createdAt: string;
   updatedAt: string;

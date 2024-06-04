@@ -1,9 +1,13 @@
 import {Post} from 'app/api/post.type';
-import {DocumentPickerResponse} from 'react-native-document-picker';
 import {createWithEqualityFn} from 'zustand/traditional';
 
+export type MediaType = {
+  uri: string;
+  name: string;
+};
+
 type PostType = {
-  media: DocumentPickerResponse[];
+  media: MediaType[];
   visible: boolean;
   data?: Post;
 };
@@ -12,7 +16,7 @@ type SyncType = {
   post: number;
   friend: number;
   chat: number;
-  liked: number;
+  profile: number;
 };
 
 type State = {
@@ -27,7 +31,7 @@ export const useHomeStore = createWithEqualityFn<State>(set => ({
     post: 0,
     friend: 0,
     chat: 0,
-    liked: 0,
+    profile: 0,
   },
   post: {
     media: [],

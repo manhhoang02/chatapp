@@ -1,4 +1,4 @@
-import {AppBlock, AppTouchableOpacity} from '@starlingtech/element';
+import {AppBlock, AppText, AppTouchableOpacity} from '@starlingtech/element';
 import {useChatContext} from 'app/components/chat/ChatContext';
 import {TopTabScreenProps} from 'app/navigation/params';
 import useAuthStore from 'app/store/authStore';
@@ -10,7 +10,7 @@ import {StyleSheet, Text} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import color from '@abong.code/theme/color';
 import LinearAvatar from 'app/components/LinearAvatar';
-import {getStreamAvatar} from 'app/hook/useGetAvatar';
+import {useGetChannelInfo} from 'helper/channelHelper';
 
 export const ChannelListScreen = ({navigation}: TopTabScreenProps<'Tab4'>) => {
   const userId = useAuthStore(s => s.user.id);
@@ -29,12 +29,6 @@ export const ChannelListScreen = ({navigation}: TopTabScreenProps<'Tab4'>) => {
     navigation.navigate('ChannelScreen');
   };
 
-  const renderPreviewAvatar = ({channel}: {channel: any}) => {
-    const {avatar} = getStreamAvatar(channel);
-
-    return <LinearAvatar uri={avatar} size={45} disabled />;
-  };
-
   return (
     <>
       <AppBlock flex background="white" ph={12}>
@@ -50,7 +44,8 @@ export const ChannelListScreen = ({navigation}: TopTabScreenProps<'Tab4'>) => {
             last_message_at: -1,
           }}
           onSelect={onSelect}
-          PreviewAvatar={renderPreviewAvatar}
+          PreviewAvatar={RenderPreviewAvatar}
+          PreviewTitle={RenderPreviewTitle}
         />
       </AppBlock>
 
@@ -63,7 +58,20 @@ export const ChannelListScreen = ({navigation}: TopTabScreenProps<'Tab4'>) => {
   );
 };
 
+const RenderPreviewTitle = ({channel}: {channel: any}) => {
+  const {channelName} = useGetChannelInfo(channel);
+
+  return <AppText style={styles.channelTitle}>{channelName}</AppText>;
+};
+
+const RenderPreviewAvatar = ({channel}: {channel: any}) => {
+  const {avatar} = useGetChannelInfo(channel);
+
+  return <LinearAvatar uri={avatar} size={45} disabled />;
+};
+
 const styles = StyleSheet.create({
+  channelTitle: {fontSize: 16, fontWeight: '700'},
   title: {
     fontSize: 26,
     fontWeight: 'bold',

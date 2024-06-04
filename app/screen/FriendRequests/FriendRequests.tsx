@@ -14,7 +14,7 @@ import {useHomeStore} from 'app/store/homeStore';
 
 export default function () {
   const {top, bottom} = useSafeAreaInsets();
-  const {user} = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const sync = useHomeStore(s => s.sync);
 
   const {data, refetch} = useGetFriendRequests({

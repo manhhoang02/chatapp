@@ -29,6 +29,9 @@ import {useGetUserById} from 'app/api/auth';
 import useAuthStore from 'app/store/authStore';
 import {MediaItem} from './CreatePostMediaField';
 import ModalViewMedia from './modals/ModalViewMedia';
+import {useNavigation} from '@react-navigation/native';
+import {ParamsStack} from 'app/navigation/params';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 interface Props {
   item: Post;
@@ -37,9 +40,11 @@ interface Props {
 const BLACK_80 = '#00000080';
 const RED = '#FF204E';
 
-export default function (props: Props) {
-  const {item} = props;
+export default function ({item}: Props) {
   const user = useAuthStore(s => s.user);
+
+  const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
+
   const commentSheetRef = useRef<BottomSheetModal>(null);
   const actionsSheetRef = useRef<BottomSheetModal>(null);
 
@@ -92,15 +97,25 @@ export default function (props: Props) {
     }
   };
 
+  const handleNavigateToProfile = () => {
+    navigation.navigate('Profile', {id: item.author});
+  };
+
   return (
     <>
       <View style={styles.container}>
         <AppBlock row>
-          <LinearAvatar uri={author?.avatar} size={53} online />
+          <LinearAvatar
+            uri={author?.avatar}
+            size={53}
+            onPress={handleNavigateToProfile}
+          />
           <AppBlock flex>
-            <AppText size={16} weight="800">
-              {author?.firstName + ' ' + author?.lastName}
-            </AppText>
+            <AppTouchableOpacity onPress={handleNavigateToProfile}>
+              <AppText size={16} weight="800">
+                {author?.firstName + ' ' + author?.lastName}
+              </AppText>
+            </AppTouchableOpacity>
             <AppBlock row alignItems="center">
               <AppText size={13} weight="500" style={{color: BLACK_80}} mr={4}>
                 {moment(item.createdAt).locale('vi').fromNow(true)} •
@@ -145,7 +160,10 @@ export default function (props: Props) {
               ) : null}
             </View>
             <MediaItem
-              file={item.files[0]}
+              file={{
+                uri: item.files[0].uri,
+                name: item.files[0].name || '',
+              }}
               style={styles.image}
               controls={false}
             />

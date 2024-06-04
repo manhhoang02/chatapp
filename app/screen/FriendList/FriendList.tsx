@@ -15,7 +15,7 @@ import useAuthStore from 'app/store/authStore';
 import {useHomeStore} from 'app/store/homeStore';
 
 export default function ({}: TopTabScreenProps<'Tab2'>) {
-  const {user} = useAuthStore();
+  const user = useAuthStore(s => s.user);
   const sync = useHomeStore(s => s.sync);
 
   const [search, setSearch] = useState('');
