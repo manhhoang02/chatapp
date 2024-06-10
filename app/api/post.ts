@@ -84,7 +84,7 @@ export const createPost = async (
       });
 
       return {
-        message: 'Thành công! Đã đăng bài viết mới',
+        message: 'Đã đăng bài viết mới',
       };
     })
     .catch(error => {
@@ -170,7 +170,7 @@ export const useEditPost = () => {
         files: params.files,
         updatedAt: new Date().toISOString(),
       });
-      return {message: 'Thành công! Đã chỉnh sửa bài viết'};
+      return {message: 'Đã chỉnh sửa bài viết'};
     },
   );
 };

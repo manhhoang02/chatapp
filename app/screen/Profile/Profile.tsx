@@ -27,6 +27,7 @@ import {useHomeStore} from 'app/store/homeStore';
 import moment from 'moment';
 import React, {useState} from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
@@ -35,9 +36,8 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import {View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {shallow} from 'zustand/shallow';
+import ProfileInfo from './container/Profile.Info';
 
 export default function ({
   navigation,
@@ -51,7 +51,6 @@ export default function ({
     s => [s.dispatchSync, s.sync],
     shallow,
   );
-  const {top} = useSafeAreaInsets();
   const {setChannel} = useChatContext();
 
   const [showActions, setShowActions] = useState(false);
@@ -59,8 +58,14 @@ export default function ({
   const [background, setBackground] = useState('');
   const [mode, setMode] = useState<'avatar' | 'background'>('avatar');
 
-  const {data, refetch} = useGetUserById(route.params.id, sync.profile);
-  const {data: userPosts} = useGetUserPosts({userId: route.params.id});
+  const {
+    data,
+    refetch,
+    isLoading: u_loading,
+  } = useGetUserById(route.params.id, sync.profile);
+  const {data: userPosts, isLoading: p_loading} = useGetUserPosts({
+    userId: route.params.id,
+  });
 
   const isFriend = user.friends.some(i => i === data?.id);
   const isSentFriendReq = user.sent_friend_requests.some(i => i === data?.id);
@@ -118,10 +123,6 @@ export default function ({
 
   const handleSendMsg = async () => {
     if (data) {
-      if (!isFriend) {
-        showToastMessageError('Lỗi', 'Bạn cần kết bạn trước khi nhắn tin');
-        return;
-      }
       const channel = chatClient.channel('messaging', {
         members: [user.id, data.id],
         name: data.firstName + ' ' + data.lastName,
@@ -159,14 +160,22 @@ export default function ({
 
   const {isRefreshing, onRefresh} = useRefresh(refetch);
 
+  if (u_loading && p_loading) {
+    return (
+      <AppBlock flex center>
+        <ActivityIndicator size={'large'} color={color.primary} />
+      </AppBlock>
+    );
+  }
+
   return (
     <>
-      <View style={[styles.container, {paddingTop: top}]}>
-        <View style={[styles.header]}>
+      <View style={styles.container}>
+        {/* <View style={[styles.header]}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color={color.black} />
           </TouchableOpacity>
-        </View>
+        </View> */}
         <TouchableWithoutFeedback
           onPress={() => openModalActions('background')}>
           <Image
@@ -180,16 +189,19 @@ export default function ({
           />
         </TouchableWithoutFeedback>
 
-        <LinearAvatar
-          uri={avatar || data?.avatar}
-          size={120}
-          onPress={() => openModalActions('avatar')}
-          style={styles.avatar}
-        />
         <AppBlock flex ph={16}>
-          <Text style={styles.name}>
-            {data?.firstName + ' ' + data?.lastName}
-          </Text>
+          <AppBlock alignItems="center">
+            <LinearAvatar
+              uri={avatar || data?.avatar}
+              size={120}
+              onPress={() => openModalActions('avatar')}
+              style={styles.avatar}
+            />
+            <Text style={styles.name}>
+              {data?.firstName + ' ' + data?.lastName}
+            </Text>
+          </AppBlock>
+
           {data?.id !== user.id && (
             <View style={styles.containerBtn}>
               <TouchableOpacity
@@ -201,14 +213,19 @@ export default function ({
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleSendMsg}
+                disabled={!isFriend}
                 style={[
                   styles.btn,
                   {backgroundColor: color.black006, marginLeft: appSize(20)},
+                  !isFriend && {opacity: 0.5},
                 ]}>
                 <Text style={styles.textBtn}>Nhắn tin</Text>
               </TouchableOpacity>
             </View>
           )}
+
+          <ProfileInfo item={data!} />
+
           <Text style={styles.textPost}>Bài viết</Text>
           <View style={styles.container}>
             <FlatList
@@ -238,7 +255,7 @@ export default function ({
 }
 
 const styles = StyleSheet.create({
-  avatar: {marginTop: -80, marginLeft: 16},
+  avatar: {marginTop: -80},
   textPost: {
     fontWeight: 'bold',
     color: color.black,
@@ -256,7 +273,6 @@ const styles = StyleSheet.create({
     height: AppConstant.SCREEN_WIDTH * 0.5,
     width: AppConstant.SCREEN_WIDTH,
     backgroundColor: '#FFF',
-    marginTop: appSize(10),
   },
   boxAvatar: {
     width: appSize(120),

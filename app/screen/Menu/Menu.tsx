@@ -95,6 +95,7 @@ export default function ({navigation}: TopTabScreenProps<'Tab5'>) {
             <Ionicons name="settings-outline" size={24} color={color.primary} />
           }
           text={'Cài đặt'}
+          onPress={() => navigation.navigate('Setting')}
         />
         <BtnAction
           icon={

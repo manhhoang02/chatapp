@@ -113,7 +113,7 @@ export default function ({item}: Props) {
           <AppBlock flex>
             <AppTouchableOpacity onPress={handleNavigateToProfile}>
               <AppText size={16} weight="800">
-                {author?.firstName + ' ' + author?.lastName}
+                {author ? author.firstName + ' ' + author.lastName : '-/-'}
               </AppText>
             </AppTouchableOpacity>
             <AppBlock row alignItems="center">

@@ -22,6 +22,7 @@ export type ParamsStack = {
   CallScreen: undefined;
   InCallScreen: undefined;
   ResetPassword: undefined;
+  Setting: undefined;
 };
 export type ParamsAuth = {
   SplashScreen: undefined;

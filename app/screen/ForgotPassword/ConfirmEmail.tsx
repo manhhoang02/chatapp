@@ -31,7 +31,7 @@ export default function ({title}: Props) {
   const navigation = useNavigation<NativeStackNavigationProp<ParamsAuth>>();
   const insets = useSafeAreaInsets();
 
-  const [email, setEmail] = useState('manhkuma@gmail.com');
+  const [email, setEmail] = useState('');
   const validateEmail = (inputEmail: string) => {
     return inputEmail.match(
       // eslint-disable-next-line no-useless-escape
@@ -81,7 +81,7 @@ export default function ({title}: Props) {
         <View>
           <TextInput
             placeholder="Nhập địa chỉ email của bạn"
-            placeholderTextColor="#EBE2F8"
+            placeholderTextColor={color.primary}
             style={styles.textInput}
             value={email}
             onChangeText={setEmail}

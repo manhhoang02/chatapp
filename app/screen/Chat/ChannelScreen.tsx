@@ -51,27 +51,6 @@ export function ChannelScreen({
     setShowDetail(!showDetail);
   };
 
-  // const createPoll = async () => {
-  //   const poll = await chatClient.createPoll({
-  //     name: 'Where should we host our next company event?',
-  //     options: [
-  //       {
-  //         text: 'Amsterdam, The Netherlands',
-  //         foo: 'bar',
-  //       },
-  //       {
-  //         text: 'Boulder, CO',
-  //         foo: 'baz',
-  //       },
-  //     ],
-  //     foo: 'bar',
-  //   });
-
-  //   consoleLog('message', poll);
-
-  //   // message.poll contains all relevant poll data
-  // };
-
   return (
     <Channel channel={channel}>
       <>
@@ -89,12 +68,12 @@ export function ChannelScreen({
             </AppText>
           </AppBlock>
           <AppBlock row alignItems="center">
-            {/* <Ionicons
-            name="call"
-            size={24}
-            color={color.primary}
-            onPress={handleCall}
-          /> */}
+            <Ionicons
+              name="call"
+              size={24}
+              color={color.primary}
+              onPress={handleCall}
+            />
             <Ionicons
               name="videocam"
               size={24}

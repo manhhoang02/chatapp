@@ -1,7 +1,7 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {ParamsStack} from './params';
-import Profile from 'app/screen/Profile';
+import Profile from 'app/screen/Profile/Profile';
 import {TopTabNavigator} from './TopTabNavigator';
 import FriendRequests from 'app/screen/FriendRequests/FriendRequests';
 import {
@@ -20,6 +20,7 @@ import {
 import useAuthStore from 'app/store/authStore';
 import InCallScreen from 'app/screen/Call/InCallScreen';
 import ResetPassword from 'app/screen/Menu/ResetPassword';
+import Setting from 'app/screen/Menu/Setting';
 
 const chatClient = StreamChat.getInstance(chatApiKey);
 
@@ -61,11 +62,26 @@ const MainNavigator = () => {
               headerShown: false,
             }}>
             <Stack.Screen name="TabScreen" component={TopTabNavigator} />
-            <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen
+              name="Profile"
+              component={Profile}
+              options={{
+                headerShown: true,
+                title: '',
+              }}
+            />
             <Stack.Screen name="FriendRequests" component={FriendRequests} />
             <Stack.Screen name="ChannelScreen" component={ChannelScreen} />
             <Stack.Screen name="InCallScreen" component={InCallScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPassword} />
+            <Stack.Screen
+              name="Setting"
+              component={Setting}
+              options={{
+                headerShown: true,
+                title: 'Cài đặt',
+              }}
+            />
           </Stack.Navigator>
           <CallScreen />
         </StreamVideo>

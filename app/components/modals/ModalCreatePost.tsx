@@ -24,6 +24,7 @@ import useAuthStore from 'app/store/authStore';
 import {useCreatePost, useEditPost} from 'app/api/post';
 import {getImagePath, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
 import {launchCamera} from 'helper/launchCamera';
+import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
 
 export default function () {
   const user = useAuthStore(s => s.user);
@@ -36,6 +37,7 @@ export default function () {
   );
 
   const [description, setDescription] = useState('');
+  const [isPosting, setIsPosting] = useState(false);
 
   useEffect(() => {
     if (post.data) {
@@ -49,9 +51,12 @@ export default function () {
   const onClose = () => {
     setDescription('');
     dispatchPost({visible: false, media: [], data: undefined});
+    setIsPosting(false);
   };
 
   const handleCreatePost = async () => {
+    setIsPosting(true);
+
     const files = await Promise.all(
       post.media.map(async file => ({
         uri: await getImagePath(file),
@@ -70,10 +75,12 @@ export default function () {
           onSuccess: async res => {
             showToastMessageSuccess(res.message);
             dispatchSync({post: moment().unix()});
+            setIsPosting(false);
             onClose();
           },
           onError: () => {
-            showToastMessageError('Thất bại!', 'Đã có lỗi xảy ra');
+            showToastMessageError('Đã có lỗi xảy ra');
+            setIsPosting(false);
           },
         },
       );
@@ -89,10 +96,12 @@ export default function () {
         onSuccess: res => {
           showToastMessageSuccess(res.message);
           dispatchSync({post: moment().unix()});
+          setIsPosting(false);
           onClose();
         },
         onError: () => {
-          showToastMessageError('Thất bại!', 'Đã có lỗi xảy ra');
+          showToastMessageError('Đã có lỗi xảy ra');
+          setIsPosting(false);
         },
       },
     );
@@ -139,6 +148,7 @@ export default function () {
   };
 
   const inputHeight = post.media.length > 0 ? 55 : '45%';
+  const disabled = !description && post.media.length === 0;
 
   return (
     <Modal
@@ -164,31 +174,19 @@ export default function () {
               {post.data ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
             </Text>
 
-            <TouchableOpacity
-              style={[
-                {
-                  backgroundColor:
-                    description || post.media.length > 0
-                      ? color.primary
-                      : light.light_gray,
-                },
-                styles.postBtn,
-              ]}
-              disabled={!description && post.media.length === 0}
-              onPress={handleCreatePost}>
-              <Text
-                style={[
-                  styles.textBtn,
-                  {
-                    color:
-                      description || post.media.length > 0
-                        ? color.white
-                        : light.gray,
-                  },
-                ]}>
-                {post.data ? 'Lưu' : 'Đăng'}
-              </Text>
-            </TouchableOpacity>
+            <AppProcessingButton
+              width={80}
+              height={40}
+              backgroundColor={disabled ? light.light_gray : color.primary}
+              text={post.data ? 'Lưu' : 'Đăng'}
+              onPress={handleCreatePost}
+              disabled={disabled}
+              processing={isPosting}
+              textStyle={{
+                fontSize: appSize(15),
+                color: disabled ? light.gray : color.white,
+              }}
+            />
           </View>
 
           <TextInput

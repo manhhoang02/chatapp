@@ -183,13 +183,15 @@ export default function ({bottomRef, postId, needReload}: Props) {
   );
 
   return (
-    <BottomSheetContainer bottomRef={bottomRef}>
+    <BottomSheetContainer snapPoints={['100%']} bottomRef={bottomRef}>
       {cloneElement(HeaderComponent)}
       <BottomSheetFlatList
         data={data}
         renderItem={renderItem}
         keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={{paddingHorizontal: appSize(10)}}
+        contentContainerStyle={{
+          paddingHorizontal: appSize(10),
+        }}
         showsVerticalScrollIndicator={false}
         scrollToOverflowEnabled
       />
