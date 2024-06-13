@@ -1,32 +1,30 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {FlatList, StyleSheet, Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
-import {useGetFriendRequests} from 'app/api/auth';
+import {recentlyFriendRequestListener} from 'app/api/auth';
 import {Resp_User} from 'app/api/auth.type';
 import ItemFriendRequest from './container/ItemFriendRequest';
 import {AppBlock, AppText} from '@starlingtech/element';
 import {useRefresh} from 'app/hook/useRefresh';
 import FriendRequestHeader from './container/FriendRequest.Header';
-import useAuthStore from 'app/store/authStore';
-import {useHomeStore} from 'app/store/homeStore';
+import {useDataStore} from 'app/store/dataStore';
 
 export default function () {
   const {top, bottom} = useSafeAreaInsets();
-  const user = useAuthStore(s => s.user);
-  const sync = useHomeStore(s => s.sync);
+  const data = useDataStore(s => s.recentlyData.friendRequestData);
 
-  const {data, refetch} = useGetFriendRequests({
-    userId: user.id,
-    reload: sync.friend,
-  });
+  useEffect(() => {
+    const subscriber = recentlyFriendRequestListener();
+    return subscriber;
+  }, []);
 
   const renderItem = ({item}: {item: Resp_User}) => {
     return <ItemFriendRequest item={item} />;
   };
 
-  const {isRefreshing, onRefresh} = useRefresh(refetch);
+  const {isRefreshing, onRefresh} = useRefresh(recentlyFriendRequestListener);
 
   return (
     <View style={[styles.container, {paddingTop: top, paddingBottom: bottom}]}>

@@ -1,15 +1,18 @@
 import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
-import {useGetComments, useCreateComment} from 'app/api/comment';
-import {likeOrDislikePost, useGetPostById} from 'app/api/post';
+import {
+  useCreateComment,
+  useReplyComment,
+  useGetComments,
+} from 'app/api/comment';
+import {likeOrDislikePost, recentlyPostByIdListener} from 'app/api/post';
 import React, {cloneElement, useEffect, useState} from 'react';
 
-import {StyleSheet, TextInput, TouchableOpacity} from 'react-native';
+import {Keyboard, StyleSheet, TextInput, TouchableOpacity} from 'react-native';
 import ItemComment from '../ItemComment';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Comment} from 'app/api/comment.type';
-import moment from 'moment';
 import {showToastMessageError} from '@abong.code/helpers/messageHelper';
 import {
   AppBlock,
@@ -22,47 +25,60 @@ import IconHeart from 'assets/icons/IconHeart';
 import AppStyles from 'elements/AppStyles';
 import {useKeyboard} from 'app/hook/keyboardHook';
 import IconSend from 'assets/icons/IconSend';
-import BottomSheetContainer from '../Global/BottomSheetContainer';
-import {BottomSheetModalMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
-import {BottomSheetFlatList} from '@gorhom/bottom-sheet';
 import IconAngleRight from 'assets/icons/IconAngleRight';
 import useAuthStore from 'app/store/authStore';
 import DocumentPicker from 'react-native-document-picker';
+import {useDataStore} from 'app/store/dataStore';
+import BottomSheetContainer from '../Global/BottomSheetContainer';
+import {BottomSheetFlatList} from '@gorhom/bottom-sheet';
+import {BottomSheetModalMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
   postId: string;
-  needReload?: number;
 };
 
-export default function ({bottomRef, postId, needReload}: Props) {
+export default function ({bottomRef, postId}: Props) {
   const user = useAuthStore(s => s.user);
+  const postById = useDataStore(s => s.recentlyData.postById);
   const {bottom} = useSafeAreaInsets();
 
   const [comment, setComment] = useState('');
   const [media, setMedia] = useState<string[]>([]);
 
   const [quantityLikes, setQuantityLikes] = useState(0);
-  const [reload, setReload] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
   const [showActions, setShowActions] = useState(false);
   const [inputHeight, setInputHeight] = useState(40);
+  const [reload, setReload] = useState(0);
+
+  const [isReplying, setIsReplying] = useState({
+    status: false,
+    replyComment: undefined as Comment | undefined,
+  });
 
   const {mutate: createCmt} = useCreateComment();
+  const {mutate: replyCmt} = useReplyComment();
   const {data} = useGetComments({postId, reload});
-  const {data: post} = useGetPostById(postId, needReload);
 
   const {keyboardVisible} = useKeyboard();
 
   useEffect(() => {
-    if (post) {
-      setQuantityLikes(post.users_liked.length);
+    const postByIdListener = recentlyPostByIdListener(postId);
+    // const commentListener = recentlyCommentListener(postId);
+    return () => {
+      postByIdListener();
+      // commentListener();
+    };
+  }, [postId]);
 
-      const liked = post.users_liked.some(e => e === user.id);
-      setIsLiked(liked);
+  useEffect(() => {
+    if (postById) {
+      setQuantityLikes(postById.users_liked.length);
+      setIsLiked(postById.users_liked.includes(user.id));
     }
-  }, [post, user.id]);
+  }, [postById, user.id]);
 
   const handleCreateComment = () => {
     createCmt(
@@ -71,13 +87,43 @@ export default function ({bottomRef, postId, needReload}: Props) {
         onSuccess: () => {
           setComment('');
           setMedia([]);
-          setReload(moment().unix());
+          Keyboard.dismiss();
+          setReload(reload + 1);
         },
         onError: () => {
           showToastMessageError('Đã có lỗi cảy ra!');
         },
       },
     );
+  };
+
+  const handleReplyComment = () => {
+    if (isReplying.status && isReplying.replyComment) {
+      replyCmt(
+        {
+          author: user.id,
+          text: comment,
+          files: media,
+          postId,
+          commentId: isReplying.replyComment.id,
+        },
+        {
+          onSuccess: () => {
+            setComment('');
+            setMedia([]);
+            setIsReplying({
+              status: false,
+              replyComment: undefined,
+            });
+            Keyboard.dismiss();
+            setReload(reload + 1);
+          },
+          onError: () => {
+            showToastMessageError('Đã có lỗi cảy ra!');
+          },
+        },
+      );
+    }
   };
 
   const handleLike = () => {
@@ -110,20 +156,37 @@ export default function ({bottomRef, postId, needReload}: Props) {
     }
   };
 
-  const renderItem = ({item}: {item: Comment}) => {
-    return <ItemComment item={item} />;
+  const onReply = (item: Comment) => {
+    setIsReplying({
+      status: true,
+      replyComment: item,
+    });
   };
+
+  const renderItem = ({item}: {item: Comment}) => {
+    return <ItemComment item={item} onReply={onReply} />;
+  };
+
   const HeaderComponent = (
-    <AppBlock style={AppStyles.rowCenterBetween} pv={8} pl={12} pr={22}>
-      <AppBlock row alignItems="center">
-        <Ionicons name="heart-circle-outline" size={20} color={light.red} />
-        <AppText color={'black'} ml={4}>
+    <AppBlock padding={[8, 22, 8, 12]}>
+      <AppBlock style={AppStyles.rowCenterBetween} mb={8}>
+        <AppText size={16} weight="700" color={color.primary}>
+          Bình luận
+        </AppText>
+        <Ionicons
+          name="close"
+          size={24}
+          onPress={() => bottomRef.current?.close()}
+        />
+      </AppBlock>
+      <AppBlock alignSelf="flex-end" row alignItems="center">
+        <TouchableOpacity style={AppStyles.rowCenter} onPress={handleLike}>
+          <IconHeart isLiked={isLiked} width={20} />
+        </TouchableOpacity>
+        <AppText color={'black'} ml={8}>
           {quantityLikes.toLocaleString()}
         </AppText>
       </AppBlock>
-      <TouchableOpacity style={AppStyles.rowCenter} onPress={handleLike}>
-        <IconHeart isLiked={isLiked} width={20} />
-      </TouchableOpacity>
     </AppBlock>
   );
   const handleCommentsChange = (newText: string) => {
@@ -134,6 +197,25 @@ export default function ({bottomRef, postId, needReload}: Props) {
 
   const FooterComponent = (
     <AppBlock>
+      {isReplying.status && (
+        <AppBlock
+          padding={[12, 16]}
+          style={[AppStyles.rowCenterBetween, styles.borderTop]}>
+          <AppText>Trả lời: {isReplying.replyComment?.text}</AppText>
+
+          <Ionicons
+            name="close"
+            size={24}
+            onPress={() =>
+              setIsReplying({
+                status: false,
+                replyComment: undefined,
+              })
+            }
+          />
+        </AppBlock>
+      )}
+
       <AppBlock
         row
         style={styles.borderTop}
@@ -149,12 +231,18 @@ export default function ({bottomRef, postId, needReload}: Props) {
           placeholderTextColor={light.black_70}
           multiline={keyboardVisible}
           numberOfLines={5}
+          focusable={isReplying.status}
+          autoFocus={isReplying.status}
           textAlignVertical="bottom"
           style={[styles.textInput, {height: Math.max(40, inputHeight)}]}
           onChangeText={handleCommentsChange}
         />
 
-        <TouchableOpacity disabled={!comment} onPress={handleCreateComment}>
+        <TouchableOpacity
+          disabled={!comment}
+          onPress={
+            isReplying.status ? handleReplyComment : handleCreateComment
+          }>
           <IconSend />
         </TouchableOpacity>
       </AppBlock>
@@ -200,29 +288,10 @@ export default function ({bottomRef, postId, needReload}: Props) {
   );
 }
 const styles = StyleSheet.create({
+  modal: {margin: 0, flex: 1},
   borderTop: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: color.secondary,
-  },
-  contentQuantity: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: appSize(10),
-  },
-  textQuantity: {
-    marginLeft: appSize(5),
-    color: color.black,
-    fontSize: appSize(16),
-  },
-  container: {
-    padding: appSize(10),
-    flex: 1,
-  },
-  contentInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: appSize(10),
-    paddingTop: appSize(8),
   },
   textInput: {
     backgroundColor: light.light_gray,

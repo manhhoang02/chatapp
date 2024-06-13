@@ -4,9 +4,8 @@ import {
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
 import color from '@abong.code/theme/color';
-import {getUserById, useAddFriend, useDeleteFriendRequest} from 'app/api/auth';
+import {addFriend, getUserById, useDeleteFriendRequest} from 'app/api/auth';
 import {Resp_User} from 'app/api/auth.type';
-import moment from 'moment';
 import React from 'react';
 import {TouchableOpacity, Text, StyleSheet} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
@@ -16,7 +15,6 @@ import LinearAvatar from 'app/components/LinearAvatar';
 import {AppBlock} from '@starlingtech/element';
 import light from 'starling/theme/color/light';
 import useAuthStore from 'app/store/authStore';
-import {useHomeStore} from 'app/store/homeStore';
 import {shallow} from 'zustand/shallow';
 
 type Props = {
@@ -27,49 +25,46 @@ export default function ({item}: Props) {
     s => [s.user, s.dispatchUser],
     shallow,
   );
-  const dispatchSync = useHomeStore(s => s.dispatchSync);
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
-  const {mutate: acceptR} = useAddFriend();
   const {mutate: deleteR} = useDeleteFriendRequest();
+
   const handleNavigateProfile = () => {
     navigation.navigate('Profile', {id: item.id});
   };
 
-  const params = {friendId: item.id, userId: user.id};
-
   const handleAccept = () => {
-    acceptR(params, {
-      onSuccess: response => {
-        showToastMessageSuccess(response.message);
-        dispatchSync({friend: moment().unix()});
+    addFriend(item.id)
+      .then(resonse => {
+        showToastMessageSuccess(resonse.message);
         getUserById(user.id).then(res => {
           dispatchUser({...user, ...res});
         });
         navigation.goBack();
-      },
-      onError: () => {
+      })
+      .catch(() => {
         showToastMessageError(
           'Lỗi',
           'Không thể thêm bạn bè. Không tìm thấy yêu cầu.',
         );
-      },
-    });
+      });
   };
 
   const handleDelete = () => {
-    deleteR(params, {
-      onSuccess: response => {
-        showToastMessageSuccess(response.message);
-        getUserById(user.id).then(res => {
-          dispatchUser({...user, ...res});
-        });
-        dispatchSync({friend: moment().unix()});
+    deleteR(
+      {friendId: item.id},
+      {
+        onSuccess: response => {
+          showToastMessageSuccess(response.message);
+          getUserById(user.id).then(res => {
+            dispatchUser({...user, ...res});
+          });
+        },
+        onError: () => {
+          showToastMessageError('Lỗi', 'Không thể xóa bạn bè.');
+        },
       },
-      onError: () => {
-        showToastMessageError('Lỗi', 'Không thể xóa bạn bè.');
-      },
-    });
+    );
   };
 
   return (

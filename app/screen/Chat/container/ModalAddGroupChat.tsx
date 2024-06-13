@@ -7,7 +7,6 @@ import {
   appSize,
 } from '@starlingtech/element';
 import ReactNativeModal from 'react-native-modal';
-import {useGetFriends} from 'app/api/auth';
 import LinearAvatar from 'app/components/LinearAvatar';
 import AppStyles from 'elements/AppStyles';
 import {chatClient} from 'app/hook/useChatClient';
@@ -18,6 +17,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import useAuthStore from 'app/store/authStore';
 import IconCheckBox from 'assets/icons/IconCheckBox';
 import {TextInput as PaperTextInput} from 'react-native-paper';
+import {useDataStore} from 'app/store/dataStore';
+import {removeVietnameseAccents} from 'helper/textHelper';
 
 interface Props {
   isVisible: boolean;
@@ -32,13 +33,12 @@ export default function ModalAddGroupChat({
 }: Props) {
   const {top, bottom} = useSafeAreaInsets();
   const userId = useAuthStore(s => s.user.id);
+  const friendList = useDataStore(s => s.recentlyData.friendData);
   const {setChannel} = useChatContext();
 
   const [keyword, setKeyword] = useState('');
   const [name, setName] = useState('');
   const [ids, setIds] = useState<string[]>([]);
-
-  const {data} = useGetFriends({userId, keyword});
 
   const onItemPress = async (id: string) => {
     if (ids.includes(id)) {
@@ -68,6 +68,13 @@ export default function ModalAddGroupChat({
     onClose();
     navigation.navigate('ChannelScreen');
   };
+
+  const filteredData = friendList.filter(item => {
+    const fullName = item.firstName + ' ' + item.lastName;
+    const lowerName = removeVietnameseAccents(fullName.toLowerCase());
+    const lowerKeyword = removeVietnameseAccents(keyword.toLowerCase());
+    return lowerName.includes(lowerKeyword);
+  });
 
   return (
     <ReactNativeModal
@@ -119,7 +126,7 @@ export default function ModalAddGroupChat({
           </AppBlock>
 
           <FlatList
-            data={data}
+            data={filteredData}
             contentContainerStyle={AppStyles.grow}
             renderItem={({item}) => {
               const isSelected = ids.includes(item.id);

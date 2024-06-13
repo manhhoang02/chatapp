@@ -1,17 +1,26 @@
 import {Alert, FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import color from '@abong.code/theme/color';
 import {AppBlock, AppText, appSize} from '@starlingtech/element';
 import moment from 'moment';
 import AppStyles from 'elements/AppStyles';
-import {deleteNotification, useGetNotifications} from 'app/api/notification';
+import {
+  deleteNotification,
+  recentlyNotificationListener,
+} from 'app/api/notification';
 import {useRefresh} from 'app/hook/useRefresh';
 import {showToastMessageSuccess} from '@abong.code/helpers/messageHelper';
+import {useDataStore} from 'app/store/dataStore';
 
 export default function Notifications() {
-  const {data: notifications, refetch} = useGetNotifications();
+  const notificationData = useDataStore(s => s.recentlyData.notificationData);
 
-  const {isRefreshing, onRefresh} = useRefresh(refetch);
+  useEffect(() => {
+    const subscriber = recentlyNotificationListener();
+    return subscriber;
+  }, []);
+
+  const {isRefreshing, onRefresh} = useRefresh(recentlyNotificationListener);
 
   const onDeleteNotification = (id: string) => {
     Alert.alert('Xác nhận', 'Bạn có chắc chắn muốn xóa thông báo này?', [
@@ -24,7 +33,6 @@ export default function Notifications() {
         onPress: () => {
           deleteNotification(id).then(() => {
             showToastMessageSuccess('Xóa thông báo thành công');
-            onRefresh();
           });
         },
       },
@@ -33,11 +41,19 @@ export default function Notifications() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Thông báo</Text>
+      <AppBlock style={AppStyles.rowCenterBetween}>
+        <Text style={styles.title}>Thông báo</Text>
+        {/* <Ionicons
+          name="trash-outline"
+          size={20}
+          color={color.placeholder}
+          onPress={onDeleteAllNotification}
+        /> */}
+      </AppBlock>
       <FlatList
         refreshing={isRefreshing}
         onRefresh={onRefresh}
-        data={notifications}
+        data={notificationData}
         renderItem={({item}) => {
           return (
             <Pressable

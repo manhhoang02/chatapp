@@ -29,12 +29,8 @@ export default function ({item}: Props) {
   };
   return (
     <>
-      <AppBlock style={styles.card}>
-        <LinearAvatar
-          size={60}
-          uri={item.avatar}
-          onPress={handleNavigateProfile}
-        />
+      <AppTouchableOpacity style={styles.card} onPress={handleNavigateProfile}>
+        <LinearAvatar size={60} uri={item.avatar} disabled />
         <AppBlock mt={6} flex ml={4}>
           <Text style={styles.nameChat}>
             {item.firstName + ' ' + item.lastName}
@@ -46,7 +42,7 @@ export default function ({item}: Props) {
         <AppTouchableOpacity justifyContent="center" onPress={handleShowAction}>
           <Ionicons name="ellipsis-horizontal" size={24} />
         </AppTouchableOpacity>
-      </AppBlock>
+      </AppTouchableOpacity>
 
       <ModalFriendActions bottomRef={bottomSheetRef} item={item} />
     </>

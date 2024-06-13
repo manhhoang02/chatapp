@@ -77,7 +77,6 @@ export default function () {
             firstName,
             lastName,
             email,
-            password: hashPassword(password),
             dateOfBirth,
             gender,
             createdAt: new Date().toISOString(),
@@ -259,15 +258,6 @@ export default function () {
       </KeyboardAwareScrollView>
     </AppContainer>
   );
-}
-
-function hashPassword(password: string) {
-  let hashedPassword = '';
-  for (let i = 0; i < password.length; i++) {
-    const charCode = password.charCodeAt(i);
-    hashedPassword += String.fromCharCode(charCode + 10);
-  }
-  return hashedPassword;
 }
 
 const genders = [

@@ -8,9 +8,9 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {AppBlock} from '@starlingtech/element';
 import {
   getUserById,
+  recentlyUserByIdListener,
   useAddFriend,
   useCancelRequestFriend,
-  useGetUserById,
   useSendRequestFriend,
 } from 'app/api/auth';
 import {useGetUserPosts} from 'app/api/post';
@@ -20,12 +20,9 @@ import LinearAvatar from 'app/components/LinearAvatar';
 import {useChatContext} from 'app/components/chat/ChatContext';
 import ModalProfileActions from 'app/components/modals/ModalProfileActions';
 import {chatClient} from 'app/hook/useChatClient';
-import {useRefresh} from 'app/hook/useRefresh';
 import {ParamsStack} from 'app/navigation/params';
 import useAuthStore from 'app/store/authStore';
-import {useHomeStore} from 'app/store/homeStore';
-import moment from 'moment';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -38,6 +35,9 @@ import {
 import {View} from 'react-native';
 import {shallow} from 'zustand/shallow';
 import ProfileInfo from './container/Profile.Info';
+import {useDataStore} from 'app/store/dataStore';
+import {useRefresh} from 'app/hook/useRefresh';
+import {consoleLog} from '@abong.code/helpers/logHelper';
 
 export default function ({
   navigation,
@@ -47,29 +47,31 @@ export default function ({
     s => [s.user, s.dispatchUser],
     shallow,
   );
-  const [dispatchSync, sync] = useHomeStore(
-    s => [s.dispatchSync, s.sync],
-    shallow,
-  );
   const {setChannel} = useChatContext();
+  const userById = useDataStore(s => s.recentlyData.userById);
 
+  consoleLog(userById, 'userById');
   const [showActions, setShowActions] = useState(false);
   const [avatar, setAvatar] = useState('');
   const [background, setBackground] = useState('');
   const [mode, setMode] = useState<'avatar' | 'background'>('avatar');
 
+  useEffect(() => {
+    const subscriber = recentlyUserByIdListener(route.params.id);
+    return subscriber;
+  }, [route.params.id]);
+
   const {
-    data,
-    refetch,
-    isLoading: u_loading,
-  } = useGetUserById(route.params.id, sync.profile);
-  const {data: userPosts, isLoading: p_loading} = useGetUserPosts({
+    data: p_data,
+    isLoading: p_loading,
+    refetch: p_refetch,
+  } = useGetUserPosts({
     userId: route.params.id,
   });
 
-  const isFriend = user.friends.some(i => i === data?.id);
-  const isSentFriendReq = user.sent_friend_requests.some(i => i === data?.id);
-  const isFriendRequest = user.friend_requests.some(i => i === data?.id);
+  const isFriend = userById?.friends.includes(user.id);
+  const isSentFriendReq = userById?.friend_requests.includes(user.id);
+  const isFriendRequest = userById?.sent_friend_requests.includes(user.id);
 
   const {mutate: acceptR} = useAddFriend();
   const {mutate: sendR} = useSendRequestFriend();
@@ -87,34 +89,32 @@ export default function ({
     showToastMessageSuccess('Thành công', response.message);
     getUserById(user.id).then(res => {
       dispatchUser({...user, ...res});
-      refetch();
     });
-    dispatchSync({friend: moment().unix()});
   };
 
   const handleChangeRelationship = () => {
-    if (data) {
-      const params = {friendId: data.id, userId: user.id};
+    if (userById) {
+      const params = {friendId: userById.id};
 
-      if (!isFriend && !isSentFriendReq) {
+      if (!isFriend && !isSentFriendReq && !isFriendRequest) {
         sendR(params, {
           onSuccess,
           onError: () => {
-            showToastMessageError('Thất bại', 'Không thể gửi lời mời');
+            showToastMessageError('Không thể gửi lời mời');
           },
         });
       } else if (isFriendRequest) {
         acceptR(params, {
           onSuccess,
           onError: () => {
-            showToastMessageError('Lỗi', 'Đã xảy ra lỗi');
+            showToastMessageError('Đã xảy ra lỗi');
           },
         });
-      } else {
+      } else if (isSentFriendReq) {
         cancelR(params, {
           onSuccess,
           onError: () => {
-            showToastMessageError('Lỗi', 'Đã xảy ra lỗi');
+            showToastMessageError('Đã xảy ra lỗi');
           },
         });
       }
@@ -122,10 +122,10 @@ export default function ({
   };
 
   const handleSendMsg = async () => {
-    if (data) {
+    if (userById) {
       const channel = chatClient.channel('messaging', {
-        members: [user.id, data.id],
-        name: data.firstName + ' ' + data.lastName,
+        members: [user.id, userById.id],
+        name: userById.firstName + ' ' + userById.lastName,
       });
 
       setChannel(channel);
@@ -143,24 +143,20 @@ export default function ({
   };
 
   let label = '';
-  switch (true) {
-    case isFriend:
-      label = 'Bạn bè';
-      break;
-    case isFriendRequest:
-      label = 'Chấp nhận lời mời';
-      break;
-    case isSentFriendReq:
-      label = 'Huỷ lời mời';
-      break;
-    default:
-      label = 'Thêm bạn bè';
-      break;
+  if (isFriend) {
+    label = 'Bạn bè';
+  } else if (isFriendRequest) {
+    label = 'Chấp nhận lời mời';
+  } else if (isSentFriendReq) {
+    label = 'Huỷ lời mời';
+  } else {
+    label = 'Thêm bạn bè';
   }
 
-  const {isRefreshing, onRefresh} = useRefresh(refetch);
+  const {isRefreshing, onRefresh} = useRefresh(p_refetch);
 
-  if (u_loading && p_loading) {
+  if (p_loading) {
+    // if (u_loading && p_loading) {
     return (
       <AppBlock flex center>
         <ActivityIndicator size={'large'} color={color.primary} />
@@ -171,17 +167,12 @@ export default function ({
   return (
     <>
       <View style={styles.container}>
-        {/* <View style={[styles.header]}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color={color.black} />
-          </TouchableOpacity>
-        </View> */}
         <TouchableWithoutFeedback
           onPress={() => openModalActions('background')}>
           <Image
             source={
-              background || data?.background
-                ? {uri: background || data?.background}
+              background || userById?.background
+                ? {uri: background || userById?.background}
                 : require('assets/image/background.png')
             }
             style={styles.coverImage}
@@ -192,17 +183,17 @@ export default function ({
         <AppBlock flex ph={16}>
           <AppBlock alignItems="center">
             <LinearAvatar
-              uri={avatar || data?.avatar}
+              uri={avatar || userById?.avatar}
               size={120}
               onPress={() => openModalActions('avatar')}
               style={styles.avatar}
             />
             <Text style={styles.name}>
-              {data?.firstName + ' ' + data?.lastName}
+              {userById?.firstName + ' ' + userById?.lastName}
             </Text>
           </AppBlock>
 
-          {data?.id !== user.id && (
+          {userById?.id !== user.id && (
             <View style={styles.containerBtn}>
               <TouchableOpacity
                 onPress={handleChangeRelationship}
@@ -217,21 +208,21 @@ export default function ({
                 style={[
                   styles.btn,
                   {backgroundColor: color.black006, marginLeft: appSize(20)},
-                  !isFriend && {opacity: 0.5},
+                  !isFriend && styles.opacity0p5,
                 ]}>
                 <Text style={styles.textBtn}>Nhắn tin</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          <ProfileInfo item={data!} />
+          <ProfileInfo item={userById!} />
 
           <Text style={styles.textPost}>Bài viết</Text>
           <View style={styles.container}>
             <FlatList
               refreshing={isRefreshing}
               onRefresh={onRefresh}
-              data={userPosts}
+              data={p_data}
               keyExtractor={(_, index) => index.toString()}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
@@ -255,6 +246,7 @@ export default function ({
 }
 
 const styles = StyleSheet.create({
+  opacity0p5: {opacity: 0.5},
   avatar: {marginTop: -80},
   textPost: {
     fontWeight: 'bold',
@@ -265,21 +257,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    paddingHorizontal: appSize(16),
-  },
   coverImage: {
     height: AppConstant.SCREEN_WIDTH * 0.5,
     width: AppConstant.SCREEN_WIDTH,
     backgroundColor: '#FFF',
-  },
-  boxAvatar: {
-    width: appSize(120),
-    height: appSize(120),
-    marginTop: appSize(-80),
-    marginLeft: appSize(16),
-    borderRadius: appSize(120),
   },
   name: {
     fontSize: appSize(18),

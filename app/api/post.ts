@@ -6,52 +6,44 @@ import {getUserById} from './auth';
 import {sendNotification} from './notification';
 import moment from 'moment';
 import {MediaType} from 'app/store/homeStore';
+import useAuthStore from 'app/store/authStore';
+import {useDataStore} from 'app/store/dataStore';
 
-type ParamsGetPosts = {
-  reload?: number;
-  userId: string;
-};
+export function recentlyPostListener() {
+  const uid = useAuthStore.getState().user.id;
+  return firestore()
+    .collection(COLLECTION.POSTS)
+    .limit(10)
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(async snapshot => {
+      const {friends} = await getUserById(uid);
+      const _tempData = snapshot.docs
+        .map(item => {
+          const data = item.data() as Post;
+          if (friends.includes(data.author) || data.author === uid) {
+            return item.data();
+          }
+        })
+        .filter(data => data !== undefined);
 
-export const useGetPosts = ({reload, userId}: ParamsGetPosts) =>
-  useQuery(['GET_POSTS', reload], async (): Promise<Post[]> => {
-    try {
-      const querySnapshot = await firestore()
-        .collection(COLLECTION.POSTS)
-        .orderBy('createdAt', 'desc')
-        .get();
+      useDataStore
+        .getState()
+        .dispatchRecentlyData({postData: _tempData as Post[]});
+    });
+}
 
-      const posts: Post[] = [];
-      const {friends} = await getUserById(userId);
-
-      querySnapshot.forEach(documentSnapshot => {
-        const data = documentSnapshot.data() as Post;
-        if (friends.includes(data.author) || data.author === userId) {
-          posts.push(data);
-        }
-      });
-
-      return posts;
-    } catch (error) {
-      throw error;
-    }
-  });
-
-export const useGetPostById = (postId: string, reload?: number) => {
-  return useQuery(
-    ['GET-POST-BY-ID', postId, reload],
-    async (): Promise<Post> => {
-      const post = await firestore()
-        .collection(COLLECTION.POSTS)
-        .doc(postId)
-        .get();
-
-      if (post.exists) {
-        return post.data() as Post;
+export function recentlyPostByIdListener(postId: string) {
+  return firestore()
+    .collection(COLLECTION.POSTS)
+    .doc(postId)
+    .onSnapshot(snapshot => {
+      if (snapshot.exists) {
+        useDataStore
+          .getState()
+          .dispatchRecentlyData({postById: snapshot.data() as Post});
       }
-      throw new Error('Không tìm thấy bài viết');
-    },
-  );
-};
+    });
+}
 
 type CreatePostParams = {
   author: string;
@@ -141,6 +133,7 @@ export const useGetUserPosts = ({reload, userId}: GetUserPostsParams) =>
       const querySnapshot = await firestore()
         .collection(COLLECTION.POSTS)
         .where('author', '==', userId)
+        .orderBy('createdAt', 'desc')
         .get();
 
       const posts: Post[] = [];

@@ -6,7 +6,19 @@ export interface Comment {
   text: string;
   files: string[];
   postId: string;
-  comments: Comment[];
+  commentId?: string;
+  users_liked: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Reply {
+  id: string;
+  author: string;
+  text: string;
+  files: string[];
+  commentId: string;
+  postId: string;
   users_liked: string[];
   createdAt: string;
   updatedAt: string;

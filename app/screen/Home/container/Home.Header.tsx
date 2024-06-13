@@ -5,18 +5,21 @@ import LinearAvatar from 'app/components/LinearAvatar';
 import color from '@abong.code/theme/color';
 import IconAddImage from 'assets/icons/home/IconAddImage';
 import ModalCreatePost from 'app/components/modals/ModalCreatePost';
-import {useHomeStore} from 'app/store/homeStore';
+import {MediaType, useHomeStore} from 'app/store/homeStore';
 import DocumentPicker from 'react-native-document-picker';
 import useAuthStore from 'app/store/authStore';
-import {useGetUserById} from 'app/api/auth';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {ParamsStack} from 'app/navigation/params';
+import {uploadToCloudStorage} from 'helper/uploadToCloudStorage';
+import {useDataStore} from 'app/store/dataStore';
+import {Resp_User} from 'app/api/auth.type';
 
 type Props = {};
 
 export default function HomeHeader(_props: Props) {
   const dispatchPost = useHomeStore(s => s.dispatchPost);
+  const friendList = useDataStore(s => s.recentlyData.friendData);
   const user = useAuthStore(s => s.user);
   const showCreatePost = () => {
     dispatchPost({visible: true});
@@ -27,13 +30,20 @@ export default function HomeHeader(_props: Props) {
       allowMultiSelection: true,
       type: [DocumentPicker.types.video, DocumentPicker.types.images],
     });
+    const media: MediaType[] = results.map(file => {
+      return {uri: file.uri, name: file.name || ''};
+    });
+
+    media.map(async file => {
+      return await uploadToCloudStorage(file);
+    });
     if (results) {
-      dispatchPost({media: results, visible: true});
+      dispatchPost({media, visible: true});
     }
   };
 
-  const renderItem = ({item}: ListRenderItemInfo<string>) => {
-    return <Item id={item} />;
+  const renderItem = ({item}: ListRenderItemInfo<Resp_User>) => {
+    return <Item item={item} />;
   };
   return (
     <>
@@ -63,7 +73,7 @@ export default function HomeHeader(_props: Props) {
         <AppBlock mt={6} padding={[12, 0, 12, 12]} background="white">
           <FlatList
             horizontal
-            data={user.friends}
+            data={friendList}
             showsHorizontalScrollIndicator={false}
             ListHeaderComponent={
               <LinearAvatar
@@ -83,14 +93,13 @@ export default function HomeHeader(_props: Props) {
   );
 }
 
-function Item({id}: {id: string}) {
-  const {data: friend} = useGetUserById(id);
+function Item({item}: {item: Resp_User}) {
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
   return (
     <LinearAvatar
-      uri={friend?.avatar}
-      name={friend?.lastName}
-      onPress={() => navigation.navigate('Profile', {id})}
+      uri={item.avatar}
+      name={item.lastName}
+      onPress={() => navigation.navigate('Profile', {id: item.id})}
     />
   );
 }

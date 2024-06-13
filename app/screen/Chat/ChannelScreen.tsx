@@ -62,6 +62,7 @@ export function ChannelScreen({
               onPress={() => navigation.goBack()}
               color={color.primary}
             />
+
             <LinearAvatar uri={avatar} size={40} style={styles.mh12} />
             <AppText size={16} weight="700" numberOfLines={1}>
               {channelName}

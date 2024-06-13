@@ -1,4 +1,4 @@
-import {StyleSheet, View, useWindowDimensions} from 'react-native';
+import {Alert, StyleSheet, View, useWindowDimensions} from 'react-native';
 import React from 'react';
 import ReactNativeModal from 'react-native-modal';
 import color from '@abong.code/theme/color';
@@ -12,6 +12,8 @@ import {useGetChannelInfo} from 'helper/channelHelper';
 import DetailMembers from './container/Detail.Members';
 import DetailMedia from './container/Detail.Media';
 import DetailFiles from './container/Detail.Files';
+import AppStyles from 'elements/AppStyles';
+import {useNavigation} from '@react-navigation/native';
 
 type Props = {
   isVisible: boolean;
@@ -34,10 +36,28 @@ export default function ({isVisible, onClose}: Props) {
   const {top, bottom} = useSafeAreaInsets();
   const {channel} = useChatContext();
   const layout = useWindowDimensions();
+  const {goBack} = useNavigation();
 
   const [index, setIndex] = React.useState(0);
 
   const {avatar, channelName} = useGetChannelInfo(channel);
+
+  const onDeleteChannel = async () => {
+    Alert.alert('Xoá kênh', 'Bạn có chắc chắn muốn xoá kênh này?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'OK',
+        onPress: async () => {
+          await channel.delete();
+          onClose();
+          goBack();
+        },
+      },
+    ]);
+  };
 
   const renderTabBar = (props: any) => {
     return (
@@ -71,13 +91,21 @@ export default function ({isVisible, onClose}: Props) {
             paddingTop: top,
           },
         ]}>
-        <Ionicons
-          name="arrow-back-outline"
-          size={24}
-          onPress={onClose}
-          style={styles.back}
-          color={color.black}
-        />
+        <AppBlock style={AppStyles.rowCenterBetween} pr={16}>
+          <Ionicons
+            name="arrow-back-outline"
+            size={24}
+            onPress={onClose}
+            style={styles.back}
+            color={color.black}
+          />
+          <Ionicons
+            name="trash-outline"
+            size={24}
+            color={color.danger}
+            onPress={onDeleteChannel}
+          />
+        </AppBlock>
         <AppBlock mb={20} alignItems="center">
           <LinearAvatar uri={avatar} size={90} />
           <AppText mt={8} size={16} weight="700" numberOfLines={1}>

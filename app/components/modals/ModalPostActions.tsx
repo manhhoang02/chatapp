@@ -10,8 +10,6 @@ import light from 'starling/theme/color/light';
 import {useDeletePost} from 'app/api/post';
 import {showToastMessageSuccess} from '@abong.code/helpers/messageHelper';
 import {useHomeStore} from 'app/store/homeStore';
-import moment from 'moment';
-import {shallow} from 'zustand/shallow';
 import {Post} from 'app/api/post.type';
 import useAuthStore from 'app/store/authStore';
 
@@ -22,10 +20,7 @@ type Props = {
 
 export default function ({bottomRef, item}: Props) {
   const userId = useAuthStore(s => s.user.id);
-  const [dispatchPost, dispatchSync] = useHomeStore(
-    s => [s.dispatchPost, s.dispatchSync],
-    shallow,
-  );
+  const dispatchPost = useHomeStore(s => s.dispatchPost);
 
   const {mutate} = useDeletePost();
 
@@ -41,7 +36,6 @@ export default function ({bottomRef, item}: Props) {
               onSuccess: response => {
                 showToastMessageSuccess(response.message);
                 bottomRef.current?.close();
-                dispatchSync({post: moment().unix()});
               },
               onError: () => {
                 showToastMessageSuccess('Thất bại', 'Gặp lỗi khi xóa bài viết');

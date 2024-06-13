@@ -54,10 +54,10 @@ export default function (props: Props) {
           await uploadToCloudStorage(file);
           const newUri = await getImagePath(file);
           if (props.mode === 'avatar') {
-            editProfile({userId: user.id, data: {avatar: newUri}});
+            editProfile({data: {avatar: newUri}});
             dispatchUser({avatar: newUri});
           } else {
-            editProfile({userId: user.id, data: {background: newUri}});
+            editProfile({data: {background: newUri}});
             dispatchUser({background: newUri});
           }
         },
