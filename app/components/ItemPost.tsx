@@ -19,7 +19,6 @@ import {Pressable} from 'react-native';
 import IconHeart from 'assets/icons/IconHeart';
 import IconComments from 'assets/icons/IconComments';
 import moment from 'moment';
-import ModalComment from './modals/ModalComment';
 import IconShare from 'assets/icons/IconShare';
 import AppConstant from '@abong.code/config/AppConstant';
 import {BottomSheetModal} from '@gorhom/bottom-sheet';
@@ -32,6 +31,7 @@ import ModalViewMedia from './modals/ModalViewMedia';
 import {useNavigation} from '@react-navigation/native';
 import {ParamsStack} from 'app/navigation/params';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import ModalComment from './modals/ModalComment';
 
 interface Props {
   item: Post;
@@ -42,7 +42,6 @@ const RED = '#FF204E';
 
 export default function ({item}: Props) {
   const user = useAuthStore(s => s.user);
-
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
   const commentSheetRef = useRef<BottomSheetModal>(null);
@@ -54,8 +53,8 @@ export default function ({item}: Props) {
   const [quantityLikes, setQuantityLikes] = useState(
     item.users_liked.length || 0,
   );
-  const [needReload, setNeedReload] = useState(0);
   const [showView, setShowView] = useState(false);
+  const [postId, setPostId] = useState('');
 
   const {data: author} = useGetUserById(item.author);
 
@@ -70,8 +69,8 @@ export default function ({item}: Props) {
   };
 
   const handleComment = () => {
-    setNeedReload(moment().unix());
     commentSheetRef.current?.present();
+    setPostId(item.id);
   };
 
   const handleOptions = () => {
@@ -191,11 +190,7 @@ export default function ({item}: Props) {
         </AppBlock>
       </View>
 
-      <ModalComment
-        bottomRef={commentSheetRef}
-        postId={item.id}
-        needReload={needReload}
-      />
+      <ModalComment bottomRef={commentSheetRef} postId={postId} />
       <ModalPostActions bottomRef={actionsSheetRef} item={item} />
       <ModalViewMedia
         data={item.files}

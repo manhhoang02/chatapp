@@ -2,8 +2,8 @@ import axios from 'axios';
 import firestore from '@react-native-firebase/firestore';
 import {COLLECTION} from 'app/store/globalStore';
 import {Notification} from './notification.type';
-import {useQuery} from '@tanstack/react-query';
 import useAuthStore from 'app/store/authStore';
+import {useDataStore} from 'app/store/dataStore';
 import moment from 'moment';
 
 export const getAccessToken = async () => {
@@ -77,24 +77,24 @@ export const sendNotification = async ({
   }
 };
 
-export const useGetNotifications = () => {
-  const userId = useAuthStore(state => state.user.id);
-  return useQuery(['GET-NOTIFICATIONS'], async (): Promise<Notification[]> => {
-    const notification_doc = firestore().collection(COLLECTION.NOTIFICATIONS);
-    try {
-      const querySnapshot = await notification_doc
-        .where('topics', 'array-contains', userId)
-        .get();
-      const notifications: Notification[] = [];
-      querySnapshot.forEach(documentSnapshot => {
-        notifications.push(documentSnapshot.data() as Notification);
+export function recentlyNotificationListener() {
+  const uid = useAuthStore.getState().user.id;
+  return firestore()
+    .collection(COLLECTION.NOTIFICATIONS)
+    .limit(30)
+    .where('topics', 'array-contains', uid)
+    .onSnapshot(snapshot => {
+      const _tempData = snapshot.docs
+        .map(item => {
+          return item.data();
+        })
+        .sort((a, b) => moment(b.time).diff(moment(a.time)));
+
+      useDataStore.getState().dispatchRecentlyData({
+        notificationData: _tempData as Notification[],
       });
-      return notifications.sort((a, b) => moment(b.time).diff(moment(a.time)));
-    } catch (error) {
-      throw error;
-    }
-  });
-};
+    });
+}
 
 export const updateSeenNotification = async (notificationId: string) => {
   const notification_doc = firestore()
@@ -108,4 +108,16 @@ export const deleteNotification = async (notificationId: string) => {
     .collection(COLLECTION.NOTIFICATIONS)
     .doc(notificationId);
   await notification_doc.delete();
+};
+
+export const deleteAllNotification = async () => {
+  const uid = useAuthStore.getState().user.id;
+  const notification_docs = await firestore()
+    .collection(COLLECTION.NOTIFICATIONS)
+    .where('topics', 'array-contains', uid)
+    .get();
+
+  notification_docs.forEach(doc => {
+    doc.ref.delete();
+  });
 };

@@ -8,28 +8,40 @@ import LinearAvatar from './LinearAvatar';
 import light from 'starling/theme/color/light';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useGetUserById} from 'app/api/auth';
+import {likeOrDislikeComment, useGetReplyComment} from 'app/api/comment';
 
 const GRAY = '#66676c';
 const AVATAR_SIZE = 48;
 
-export default function ({item}: {item: Comment}) {
+export default function ({
+  item,
+  onReply,
+}: {
+  item: Comment;
+  onReply: (item: Comment) => void;
+}) {
   const {data: author} = useGetUserById(item.author);
+  const {data: replies} = useGetReplyComment(item.postId, item.id);
+
+  const filter = replies
+    ? replies.filter(rep => rep.commentId === item.id)
+    : [];
   return (
     <Item
       item={item}
       avatarUri={author?.avatar ?? ''}
       avatarSize={AVATAR_SIZE}
-      renderListReply={({item: cmt, index}) => {
-        const {data: cmtAuthor} = useGetUserById(cmt.author);
+      onReply={onReply}
+      ListReply={filter.map((rep, index) => {
         return (
           <Item
             key={index}
-            avatarSize={AVATAR_SIZE - 8}
-            item={cmt}
-            avatarUri={cmtAuthor?.avatar ?? ''}
+            avatarSize={AVATAR_SIZE - 10}
+            item={rep}
+            avatarUri={''}
           />
         );
-      }}
+      })}
     />
   );
 }
@@ -38,18 +50,13 @@ interface ItemProps {
   avatarSize: number;
   item: Comment;
   avatarUri: string;
-  renderListReply?: ({
-    item,
-    index,
-  }: {
-    item: Comment;
-    index: number;
-  }) => ReactNode;
+  ListReply?: ReactNode;
+  onReply?: (item: Comment) => void;
 }
 function Item(props: ItemProps) {
-  const {data: author} = useGetUserById(props.item.author);
+  const {avatarSize, item, ListReply, onReply} = props;
 
-  const {avatarSize, item, avatarUri, renderListReply} = props;
+  const {data: author} = useGetUserById(props.item.author);
 
   const [isCmtLiked, setIsCmtLiked] = useState(false);
   const [quantityLikes, setQuantityLikes] = useState(0);
@@ -61,7 +68,10 @@ function Item(props: ItemProps) {
     } else {
       setQuantityLikes(quantityLikes - 1);
     }
+    likeOrDislikeComment(item.postId, item.id);
   };
+
+  // consoleLog(replies, 'replies');
 
   const onLongPress = () => {
     Alert.alert('ok');
@@ -69,7 +79,7 @@ function Item(props: ItemProps) {
 
   return (
     <AppBlock row>
-      <LinearAvatar size={avatarSize} uri={avatarUri} />
+      <LinearAvatar size={avatarSize} uri={author?.avatar} />
 
       <AppBlock flex>
         <AppBlock flex mb={10}>
@@ -94,9 +104,14 @@ function Item(props: ItemProps) {
                 Thích
               </Text>
             </AppTouchableOpacity>
-            <AppTouchableOpacity ml={16} activeOpacity={0.6}>
-              <Text style={[styles.text, {color: GRAY}]}>Trả lời</Text>
-            </AppTouchableOpacity>
+            {onReply && (
+              <AppTouchableOpacity
+                ml={16}
+                activeOpacity={0.6}
+                onPress={() => onReply(item)}>
+                <Text style={[styles.text, {color: GRAY}]}>Trả lời</Text>
+              </AppTouchableOpacity>
+            )}
 
             {quantityLikes !== 0 && (
               <AppBlock flex justifyContent="flex-end" row alignItems="center">
@@ -113,11 +128,7 @@ function Item(props: ItemProps) {
           </AppBlock>
         </AppBlock>
 
-        {item.comments && item.comments.length > 0
-          ? item.comments.map((cmt, index) =>
-              renderListReply ? renderListReply({item: cmt, index}) : null,
-            )
-          : null}
+        {ListReply}
       </AppBlock>
     </AppBlock>
   );

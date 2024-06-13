@@ -7,7 +7,7 @@ import {
   appSize,
 } from '@starlingtech/element';
 import ReactNativeModal from 'react-native-modal';
-import {getUserById, useGetFriends} from 'app/api/auth';
+import {getUserById} from 'app/api/auth';
 import LinearAvatar from 'app/components/LinearAvatar';
 import AppStyles from 'elements/AppStyles';
 import {chatClient} from 'app/hook/useChatClient';
@@ -17,6 +17,8 @@ import color from '@abong.code/theme/color';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import useAuthStore from 'app/store/authStore';
 import ModalAddGroupChat from './ModalAddGroupChat';
+import {useDataStore} from 'app/store/dataStore';
+import {removeVietnameseAccents} from 'helper/textHelper';
 
 interface Props {
   isVisible: boolean;
@@ -27,12 +29,11 @@ interface Props {
 export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
   const {top, bottom} = useSafeAreaInsets();
   const userId = useAuthStore(s => s.user.id);
+  const friendList = useDataStore(s => s.recentlyData.friendData);
   const {setChannel} = useChatContext();
 
   const [keyword, setKeyword] = useState('');
   const [showAddGroup, setShowAddGroup] = useState(false);
-
-  const {data} = useGetFriends({userId, keyword});
 
   const onItemPress = async (id: string) => {
     const friend = await getUserById(id);
@@ -46,6 +47,13 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
     onClose();
     navigation.navigate('ChannelScreen');
   };
+
+  const filteredData = friendList.filter(item => {
+    const fullName = item.firstName + ' ' + item.lastName;
+    const lowerName = removeVietnameseAccents(fullName.toLowerCase());
+    const lowerKeyword = removeVietnameseAccents(keyword.toLowerCase());
+    return lowerName.includes(lowerKeyword);
+  });
 
   return (
     <>
@@ -88,7 +96,7 @@ export default function ModalAddChat({navigation, isVisible, onClose}: Props) {
             </AppBlock>
 
             <FlatList
-              data={data}
+              data={filteredData}
               contentContainerStyle={AppStyles.grow}
               renderItem={({item}) => {
                 return (

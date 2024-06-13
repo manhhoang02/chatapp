@@ -19,7 +19,6 @@ import CreatePostMediaField from '../CreatePostMediaField';
 import AppStyles from 'elements/AppStyles';
 import {MediaType, useHomeStore} from 'app/store/homeStore';
 import {shallow} from 'zustand/shallow';
-import moment from 'moment';
 import useAuthStore from 'app/store/authStore';
 import {useCreatePost, useEditPost} from 'app/api/post';
 import {getImagePath, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
@@ -31,8 +30,8 @@ export default function () {
 
   const {top} = useSafeAreaInsets();
 
-  const [post, dispatchPost, dispatchSync] = useHomeStore(
-    s => [s.post, s.dispatchPost, s.dispatchSync],
+  const [post, dispatchPost] = useHomeStore(
+    s => [s.post, s.dispatchPost],
     shallow,
   );
 
@@ -74,8 +73,6 @@ export default function () {
         {
           onSuccess: async res => {
             showToastMessageSuccess(res.message);
-            dispatchSync({post: moment().unix()});
-            setIsPosting(false);
             onClose();
           },
           onError: () => {
@@ -95,8 +92,6 @@ export default function () {
       {
         onSuccess: res => {
           showToastMessageSuccess(res.message);
-          dispatchSync({post: moment().unix()});
-          setIsPosting(false);
           onClose();
         },
         onError: () => {
@@ -180,7 +175,7 @@ export default function () {
               backgroundColor={disabled ? light.light_gray : color.primary}
               text={post.data ? 'Lưu' : 'Đăng'}
               onPress={handleCreatePost}
-              disabled={disabled}
+              disabled={disabled || isPosting}
               processing={isPosting}
               textStyle={{
                 fontSize: appSize(15),

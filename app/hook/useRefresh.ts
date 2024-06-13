@@ -1,6 +1,6 @@
 import {useState} from 'react';
 
-export function useRefresh(refetch: () => Promise<any>) {
+export function useRefresh(refetch: () => Promise<any> | any) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   async function onRefresh() {
     setIsRefreshing(true);

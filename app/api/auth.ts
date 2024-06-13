@@ -7,96 +7,69 @@ import {
   showToastMessageError,
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
-
-export type FriendParams = {
-  userId: string;
-  friendId?: string;
-  keyword?: string;
-  reload?: number;
-};
-type GetFriendRequestParams = {
-  userId: string;
-  reload?: number;
-};
-
-export const useGetFriendRequests = ({
-  userId,
-  reload,
-}: GetFriendRequestParams) => {
-  return useQuery(
-    ['GET-FRIEND-REQUEST', userId, reload],
-    async (): Promise<Resp_User[]> => {
-      try {
-        const friend_request: Resp_User[] = [];
-        const user = await getUserById(userId);
-        const friend_request_Ids = user.friend_requests;
-
-        const friendUsers = await Promise.all(
-          friend_request_Ids.map(async friendId => getUserById(friendId)),
-        );
-
-        friend_request.push(...friendUsers);
-        return friend_request;
-      } catch (error) {
-        throw error;
-      }
-    },
-  );
-};
+import useAuthStore from 'app/store/authStore';
+import {useDataStore} from 'app/store/dataStore';
+import {removeVietnameseAccents} from 'helper/textHelper';
 
 type AddFriendParams = {
-  userId: string;
   friendId: string;
+};
+
+export const addFriend = async (friendId: string) => {
+  const userId = useAuthStore.getState().user.id;
+
+  const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
+  const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
+  const {
+    friend_requests: u_fr,
+    friends: u_friends,
+    lastName: u_lastName,
+  } = await getUserById(userId);
+  const {sent_friend_requests: f_sfr, friends: f_friends} = await getUserById(
+    friendId,
+  );
+
+  await userRef.update({
+    friend_requests: u_fr.filter(requestId => requestId !== friendId),
+    friends: [...u_friends, friendId],
+  });
+  await friendRef.update({
+    sent_friend_requests: f_sfr.filter(requestId => requestId !== userId),
+    friends: [...f_friends, userId],
+  });
+
+  await sendNotification({
+    title: 'Thông báo kết bạn',
+    body: `${u_lastName} đã chấp nhận lời mời kết bạn của bạn`,
+    topics: [friendId],
+  });
+
+  return {message: 'Thêm bạn thành công'};
 };
 
 export const useAddFriend = () => {
   return useMutation(
-    async ({userId, friendId}: AddFriendParams): Promise<{message: string}> => {
-      const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
-      const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
-
-      const {friend_requests, friends, lastName} = await getUserById(userId);
-      const {sent_friend_requests: f_sfr, friends: f_friends} =
-        await getUserById(friendId);
-
-      // Update user object with modified friend lists
-      await userRef.update({
-        friend_requests: friend_requests.filter(
-          requestId => requestId !== friendId,
-        ),
-        friends: [...friends, friendId],
-      });
-      await friendRef.update({
-        sent_friend_requests: f_sfr.filter(requestId => requestId !== userId),
-        friends: [...f_friends, userId],
-      });
-
-      await sendNotification({
-        title: 'Thông báo kết bạn',
-        body: `${lastName} đã chấp nhận lời mời kết bạn của bạn`,
-        topics: [friendId],
-      });
-
-      return {message: 'Thêm bạn thành công'};
-    },
+    ({friendId}: AddFriendParams): Promise<{message: string}> =>
+      addFriend(friendId),
   );
 };
 
 type DeleteFriendRequestParams = {
-  userId: string;
   friendId: string;
 };
 
 export const useDeleteFriendRequest = () => {
   return useMutation(
     async ({
-      userId,
       friendId,
     }: DeleteFriendRequestParams): Promise<{message: string}> => {
+      const userId = useAuthStore.getState().user.id;
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
-      const {friend_requests} = await getUserById(userId);
-      const {sent_friend_requests} = await getUserById(friendId);
+
+      const friend_requests = (await getUserById(userId)).friend_requests;
+      const sent_friend_requests = (await getUserById(friendId))
+        .sent_friend_requests;
 
       await userRef.update({
         friend_requests: friend_requests.filter(
@@ -116,7 +89,8 @@ export const useDeleteFriendRequest = () => {
 
 export const useSendRequestFriend = () =>
   useMutation(
-    async ({userId, friendId}: AddFriendParams): Promise<{message: string}> => {
+    async ({friendId}: AddFriendParams): Promise<{message: string}> => {
+      const userId = useAuthStore.getState().user.id;
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
 
@@ -139,9 +113,11 @@ export const useSendRequestFriend = () =>
       return {message: 'Thêm bạn thành công'};
     },
   );
+
 export const useCancelRequestFriend = () =>
   useMutation(
-    async ({userId, friendId}: AddFriendParams): Promise<{message: string}> => {
+    async ({friendId}: AddFriendParams): Promise<{message: string}> => {
+      const userId = useAuthStore.getState().user.id;
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
 
@@ -187,49 +163,15 @@ export const useGetUserById = (userId: string, reload?: number) => {
   );
 };
 
-type GetFriendsParams = {
-  userId: string;
-  keyword?: string;
-  reload?: number;
-};
-
-export const useGetFriends = ({userId, keyword, reload}: GetFriendsParams) => {
-  return useQuery(
-    ['GET-FRIENDS', userId, keyword, reload],
-    async (): Promise<Resp_User[]> => {
-      try {
-        const friends: Resp_User[] = [];
-        const user = await getUserById(userId);
-        const friendIds = user.friends;
-
-        const friendUsers = await Promise.all(
-          friendIds.map(async friendId => getUserById(friendId)),
-        );
-
-        friends.push(...friendUsers);
-        return keyword
-          ? friends.filter(
-              item =>
-                item.firstName.toLowerCase().includes(keyword.toLowerCase()) ||
-                item.lastName.toLowerCase().includes(keyword.toLowerCase()),
-            )
-          : friends;
-      } catch (error) {
-        throw error;
-      }
-    },
-  );
-};
-
 type GetListUsersParams = {
   keyword?: string;
-  userId: string;
 };
 
-export const useGetListUsers = ({keyword, userId}: GetListUsersParams) => {
+export const useGetListUsers = ({keyword}: GetListUsersParams = {}) => {
   return useQuery(
     ['GET-LIST-USERS', keyword],
     async (): Promise<Resp_User[]> => {
+      const userId = useAuthStore.getState().user.id;
       try {
         const querySnapshot = await firestore()
           .collection(COLLECTION.USERS)
@@ -240,13 +182,14 @@ export const useGetListUsers = ({keyword, userId}: GetListUsersParams) => {
         querySnapshot.forEach(documentSnapshot => {
           list.push(documentSnapshot.data() as Resp_User);
         });
-        return keyword
-          ? list.filter(
-              item =>
-                item.firstName.toLowerCase().includes(keyword.toLowerCase()) ||
-                item.lastName.toLowerCase().includes(keyword.toLowerCase()),
-            )
-          : list;
+        return list.filter(item => {
+          const fullName = `${item.firstName} ${item.lastName}`;
+          const lowerName = removeVietnameseAccents(fullName.toLowerCase());
+          const lowerKeyword = removeVietnameseAccents(
+            keyword?.toLowerCase() ?? '',
+          );
+          return lowerName.includes(lowerKeyword);
+        });
       } catch (error) {
         throw error;
       }
@@ -255,16 +198,13 @@ export const useGetListUsers = ({keyword, userId}: GetListUsersParams) => {
 };
 
 type DeleteFriendParams = {
-  userId: string;
   friendId: string;
 };
 
 export const useDeleteFriend = () => {
   return useMutation(
-    async ({
-      userId,
-      friendId,
-    }: DeleteFriendParams): Promise<{message: string}> => {
+    async ({friendId}: DeleteFriendParams): Promise<{message: string}> => {
+      const userId = useAuthStore.getState().user.id;
       const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       const friendRef = firestore().doc(`${COLLECTION.USERS}/${friendId}`);
 
@@ -284,15 +224,15 @@ export const useDeleteFriend = () => {
     },
   );
 };
-type EditProfleParams = {
-  userId: string;
+type EditProfileParams = {
   data: Partial<Resp_User>;
 };
 
 export const useEditProfile = () => {
   return useMutation(
-    async (params: EditProfleParams): Promise<{message: string}> => {
-      const userRef = firestore().doc(`${COLLECTION.USERS}/${params.userId}`);
+    async (params: EditProfileParams): Promise<{message: string}> => {
+      const userId = useAuthStore.getState().user.id;
+      const userRef = firestore().doc(`${COLLECTION.USERS}/${userId}`);
       await userRef.update(params.data);
       return {message: 'Cập nhật thành công'};
     },
@@ -306,3 +246,66 @@ export const useEditProfile = () => {
     },
   );
 };
+
+export function recentlyFriendListListener() {
+  const userId = useAuthStore.getState().user.id;
+
+  return firestore()
+    .collection(COLLECTION.USERS)
+    .doc(userId)
+    .onSnapshot(async snapshot => {
+      if (snapshot.exists) {
+        const {friends} = snapshot.data() as Resp_User;
+        const _tempData = await Promise.all(
+          friends.map(async friendId => {
+            return await getUserById(friendId);
+          }),
+        );
+
+        const _sorted = _tempData.sort((a, b) => {
+          return a.firstName.localeCompare(b.firstName);
+        });
+
+        useDataStore.getState().dispatchRecentlyData({friendData: _sorted});
+      }
+    });
+}
+
+export function recentlyFriendRequestListener() {
+  const userId = useAuthStore.getState().user.id;
+
+  return firestore()
+    .collection(COLLECTION.USERS)
+    .doc(userId)
+    .onSnapshot(async snapshot => {
+      if (snapshot.exists) {
+        const {friend_requests} = snapshot.data() as Resp_User;
+        const _tempData = await Promise.all(
+          friend_requests.map(async friendId => {
+            return await getUserById(friendId);
+          }),
+        );
+
+        const _sorted = _tempData.sort((a, b) => {
+          return a.firstName.localeCompare(b.firstName);
+        });
+
+        useDataStore
+          .getState()
+          .dispatchRecentlyData({friendRequestData: _sorted});
+      }
+    });
+}
+
+export function recentlyUserByIdListener(id: string) {
+  return firestore()
+    .collection(COLLECTION.USERS)
+    .doc(id)
+    .onSnapshot(snapshot => {
+      if (snapshot.exists) {
+        useDataStore
+          .getState()
+          .dispatchRecentlyData({userById: snapshot.data() as Resp_User});
+      }
+    });
+}

@@ -7,6 +7,7 @@ export enum COLLECTION {
   COMMENTS = 'comments',
   MESSAGES = 'messages',
   NOTIFICATIONS = 'notifications',
+  REPLIES = 'replies',
 }
 
 type State = {

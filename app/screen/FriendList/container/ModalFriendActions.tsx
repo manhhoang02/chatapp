@@ -23,8 +23,6 @@ import {
   showToastMessageError,
   showToastMessageSuccess,
 } from '@abong.code/helpers/messageHelper';
-import {useHomeStore} from 'app/store/homeStore';
-import moment from 'moment';
 import {shallow} from 'zustand/shallow';
 import {useChatContext} from 'app/components/chat/ChatContext';
 import {chatClient} from 'app/hook/useChatClient';
@@ -49,8 +47,6 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
 
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
-  const dispatchSync = useHomeStore(s => s.dispatchSync);
-
   const {mutate} = useDeleteFriend();
 
   const handleDeleteFriend = () => {
@@ -62,19 +58,18 @@ export default function ModalFriendActions({bottomRef, item}: Props) {
         {
           text: 'Đồng ý',
           onPress: () => {
+            bottomRef.current?.close();
             mutate(
-              {friendId: item.id, userId: user.id},
+              {friendId: item.id},
               {
                 onSuccess: () => {
                   showToastMessageSuccess(
                     'Thành công!',
                     'Xóa bạn bè thành công',
                   );
-                  bottomRef.current?.close();
                   getUserById(user.id).then(res => {
                     dispatchUser({...user, ...res});
                   });
-                  dispatchSync({friend: moment().unix()});
                 },
                 onError: () => {
                   showToastMessageError('Lỗi!', 'Xóa bạn bè thất bại');

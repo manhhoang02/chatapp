@@ -1,8 +1,8 @@
 import {appSize} from '@abong.code/config/AppConstant';
 import color from '@abong.code/theme/color';
-import {useGetFriends} from 'app/api/auth';
+import {recentlyFriendListListener} from 'app/api/auth';
 import {Resp_User} from 'app/api/auth.type';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import ItemFriendList from './container/ItemFriendList';
 import {AppBlock, AppText} from '@starlingtech/element';
@@ -11,27 +11,31 @@ import {useRefresh} from 'app/hook/useRefresh';
 import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
 import FriendListHeader from './container/FriendList.Header';
 import {TopTabScreenProps} from 'app/navigation/params';
-import useAuthStore from 'app/store/authStore';
-import {useHomeStore} from 'app/store/homeStore';
+import {useDataStore} from 'app/store/dataStore';
+import {removeVietnameseAccents} from 'helper/textHelper';
 
 export default function ({}: TopTabScreenProps<'Tab2'>) {
-  const user = useAuthStore(s => s.user);
-  const sync = useHomeStore(s => s.sync);
+  const data = useDataStore(s => s.recentlyData.friendData);
+
+  useEffect(() => {
+    const subscriber = recentlyFriendListListener();
+    return subscriber;
+  }, []);
 
   const [search, setSearch] = useState('');
-
-  const {data, refetch} = useGetFriends({
-    userId: user.id,
-    keyword: search,
-    reload: sync.friend,
-  });
 
   const renderItem = ({item}: {item: Resp_User}) => {
     return <ItemFriendList item={item} />;
   };
 
-  const {isRefreshing, onRefresh} = useRefresh(refetch);
+  const {isRefreshing, onRefresh} = useRefresh(recentlyFriendListListener);
 
+  const filteredData = data.filter(item => {
+    const fullName = item.firstName + ' ' + item.lastName;
+    const lowerName = removeVietnameseAccents(fullName.toLowerCase());
+    const lowerKeyword = removeVietnameseAccents(search.toLowerCase());
+    return lowerName.includes(lowerKeyword);
+  });
   return (
     <View style={styles.container}>
       <FriendListHeader searchText={search} setSearchText={setSearch} />
@@ -39,7 +43,7 @@ export default function ({}: TopTabScreenProps<'Tab2'>) {
       <KeyboardAwareFlatList
         refreshing={isRefreshing}
         onRefresh={onRefresh}
-        data={data}
+        data={filteredData}
         keyExtractor={(_, index) => index.toString()}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
