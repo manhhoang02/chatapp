@@ -9,9 +9,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import light from 'starling/theme/color/light';
 import {useDeletePost} from 'app/api/post';
 import {showToastMessageSuccess} from '@abong.code/helpers/messageHelper';
-import {useHomeStore} from 'app/store/homeStore';
 import {Post} from 'app/api/post.type';
 import useAuthStore from 'app/store/authStore';
+import {useHomeContext} from 'app/screen/Home/components/HomeContext';
 
 type Props = {
   bottomRef: React.RefObject<BottomSheetModalMethods>;
@@ -20,7 +20,7 @@ type Props = {
 
 export default function ({bottomRef, item}: Props) {
   const userId = useAuthStore(s => s.user.id);
-  const dispatchPost = useHomeStore(s => s.dispatchPost);
+  const {setData, setMedia, setVisible} = useHomeContext();
 
   const {mutate} = useDeletePost();
 
@@ -50,7 +50,9 @@ export default function ({bottomRef, item}: Props) {
   const handleEdit = () => {
     bottomRef.current?.close();
     setTimeout(() => {
-      dispatchPost({visible: true, data: item, media: item.files});
+      setVisible(true);
+      setData(item);
+      setMedia(item.files);
     }, 200);
   };
 

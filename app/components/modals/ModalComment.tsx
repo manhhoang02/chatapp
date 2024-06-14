@@ -3,12 +3,18 @@ import color from '@abong.code/theme/color';
 import {
   useCreateComment,
   useReplyComment,
-  useGetComments,
+  recentlyCommentListener,
 } from 'app/api/comment';
 import {likeOrDislikePost, recentlyPostByIdListener} from 'app/api/post';
 import React, {cloneElement, useEffect, useState} from 'react';
 
-import {Keyboard, StyleSheet, TextInput, TouchableOpacity} from 'react-native';
+import {
+  FlatList,
+  Keyboard,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
 import ItemComment from '../ItemComment';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -29,18 +35,17 @@ import IconAngleRight from 'assets/icons/IconAngleRight';
 import useAuthStore from 'app/store/authStore';
 import DocumentPicker from 'react-native-document-picker';
 import {useDataStore} from 'app/store/dataStore';
-import BottomSheetContainer from '../Global/BottomSheetContainer';
-import {BottomSheetFlatList} from '@gorhom/bottom-sheet';
-import {BottomSheetModalMethods} from '@gorhom/bottom-sheet/lib/typescript/types';
+import ReactNativeModal from 'react-native-modal';
 
 type Props = {
-  bottomRef: React.RefObject<BottomSheetModalMethods>;
+  visible: boolean;
+  onClose: () => void;
   postId: string;
 };
 
-export default function ({bottomRef, postId}: Props) {
+export default function ({postId, visible, onClose}: Props) {
   const user = useAuthStore(s => s.user);
-  const postById = useDataStore(s => s.recentlyData.postById);
+  const {postById, commentData} = useDataStore(s => s.recentlyData);
   const {bottom} = useSafeAreaInsets();
 
   const [comment, setComment] = useState('');
@@ -60,18 +65,24 @@ export default function ({bottomRef, postId}: Props) {
 
   const {mutate: createCmt} = useCreateComment();
   const {mutate: replyCmt} = useReplyComment();
-  const {data} = useGetComments({postId, reload});
 
   const {keyboardVisible} = useKeyboard();
 
   useEffect(() => {
     const postByIdListener = recentlyPostByIdListener(postId);
-    // const commentListener = recentlyCommentListener(postId);
+    let commentListener = () => {};
+
+    if (visible) {
+      commentListener = recentlyCommentListener(postId);
+    }
+
     return () => {
       postByIdListener();
-      // commentListener();
+      if (commentListener) {
+        commentListener();
+      }
     };
-  }, [postId]);
+  }, [postId, visible]);
 
   useEffect(() => {
     if (postById) {
@@ -173,11 +184,7 @@ export default function ({bottomRef, postId}: Props) {
         <AppText size={16} weight="700" color={color.primary}>
           Bình luận
         </AppText>
-        <Ionicons
-          name="close"
-          size={24}
-          onPress={() => bottomRef.current?.close()}
-        />
+        <Ionicons name="close" size={24} onPress={onClose} />
       </AppBlock>
       <AppBlock alignSelf="flex-end" row alignItems="center">
         <TouchableOpacity style={AppStyles.rowCenter} onPress={handleLike}>
@@ -271,20 +278,27 @@ export default function ({bottomRef, postId}: Props) {
   );
 
   return (
-    <BottomSheetContainer snapPoints={['100%']} bottomRef={bottomRef}>
-      {cloneElement(HeaderComponent)}
-      <BottomSheetFlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={{
-          paddingHorizontal: appSize(10),
-        }}
-        showsVerticalScrollIndicator={false}
-        scrollToOverflowEnabled
-      />
-      {cloneElement(FooterComponent)}
-    </BottomSheetContainer>
+    <ReactNativeModal
+      isVisible={visible}
+      onBackButtonPress={onClose}
+      useNativeDriver
+      avoidKeyboard
+      style={styles.modal}>
+      <AppBlock flex background="white">
+        {cloneElement(HeaderComponent)}
+        <FlatList
+          data={commentData}
+          renderItem={renderItem}
+          keyExtractor={(_, index) => index.toString()}
+          contentContainerStyle={{
+            paddingHorizontal: appSize(10),
+          }}
+          showsVerticalScrollIndicator={false}
+          scrollToOverflowEnabled
+        />
+        {cloneElement(FooterComponent)}
+      </AppBlock>
+    </ReactNativeModal>
   );
 }
 const styles = StyleSheet.create({

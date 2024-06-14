@@ -12,10 +12,11 @@ import {AppBlock, AppText} from '@starlingtech/element';
 import AppConstant from '@abong.code/config/AppConstant';
 import Video from 'react-native-video';
 import ModalViewMedia from './modals/ModalViewMedia';
-import {MediaType, useHomeStore} from 'app/store/homeStore';
+import {MediaType} from 'app/store/homeStore';
+import {useHomeContext} from 'app/screen/Home/components/HomeContext';
 
 export default function CreatePostMediaField() {
-  const media = useHomeStore(s => s.post.media);
+  const {media} = useHomeContext();
   const [show, setShow] = useState(false);
 
   const FILES = useMemo(() => {

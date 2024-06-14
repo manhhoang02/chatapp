@@ -35,7 +35,6 @@ export const useGetComments = (params: GetCommentsParams) => {
 };
 
 export function recentlyCommentListener(postId: string) {
-  useDataStore.getState().dispatchRecentlyData({commentData: []});
   return firestore()
     .collection(COLLECTION.POSTS)
     .doc(postId)
@@ -78,26 +77,6 @@ export const useCreateComment = () =>
       updatedAt: new Date().toISOString(),
     });
   });
-
-interface DeleteCommentParams {
-  commentId: string;
-  userId: string;
-}
-
-export const deleteComment = async ({
-  commentId,
-  userId,
-}: DeleteCommentParams) => {
-  const comment_doc = firestore()
-    .collection(COLLECTION.COMMENTS)
-    .doc(commentId);
-
-  const comment = (await comment_doc.get()).data() as Comment;
-  if (comment.author !== userId) {
-    throw new Error('Bạn không có quyền xóa bình luận này');
-  }
-  await comment_doc.delete();
-};
 
 export const likeOrDislikeComment = async (
   postId: string,
@@ -160,16 +139,39 @@ export const useReplyComment = () =>
     });
   });
 
-export const useGetReplyComment = (postId: string, commentId: string) => {
-  return useQuery(['GET-REPLIES'], async (): Promise<Comment[]> => {
-    const reply = await firestore()
-      .collection(COLLECTION.POSTS)
-      .doc(postId)
-      .collection(COLLECTION.COMMENTS)
-      .doc(commentId)
-      .collection(COLLECTION.REPLIES)
-      .get();
+export const deleteComment = async ({
+  postId,
+  commentId,
+}: {
+  postId: string;
+  commentId: string;
+}): Promise<void> => {
+  const userId = useAuthStore.getState().user.id;
 
-    return reply.docs.map(item => item.data() as Comment);
-  });
+  const comment_doc = firestore().doc(
+    `${COLLECTION.POSTS}/${postId}/${COLLECTION.COMMENTS}/${commentId}`,
+  );
+
+  const {author} = (await comment_doc.get()).data() as Comment;
+  if (author !== userId) {
+    return;
+  }
+
+  await comment_doc.delete();
+};
+
+export const deleteReplyComment = async ({
+  postId,
+  commentId,
+  replyId,
+}: {
+  postId: string;
+  commentId: string;
+  replyId: string;
+}): Promise<void> => {
+  const replyDoc = firestore().doc(
+    `${COLLECTION.POSTS}/${postId}/${COLLECTION.COMMENTS}/${commentId}/${COLLECTION.REPLIES}/${replyId}`,
+  );
+
+  await replyDoc.delete();
 };

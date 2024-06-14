@@ -17,39 +17,41 @@ import {AppText} from '@starlingtech/element';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import CreatePostMediaField from '../CreatePostMediaField';
 import AppStyles from 'elements/AppStyles';
-import {MediaType, useHomeStore} from 'app/store/homeStore';
-import {shallow} from 'zustand/shallow';
+import {MediaType} from 'app/store/homeStore';
 import useAuthStore from 'app/store/authStore';
 import {useCreatePost, useEditPost} from 'app/api/post';
 import {getImagePath, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
 import {launchCamera} from 'helper/launchCamera';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
+import {useHomeContext} from 'app/screen/Home/components/HomeContext';
+import {consoleLog} from '@abong.code/helpers/logHelper';
 
 export default function () {
   const user = useAuthStore(s => s.user);
+  const {visible, data, media, setData, setMedia, setVisible} =
+    useHomeContext();
 
   const {top} = useSafeAreaInsets();
-
-  const [post, dispatchPost] = useHomeStore(
-    s => [s.post, s.dispatchPost],
-    shallow,
-  );
 
   const [description, setDescription] = useState('');
   const [isPosting, setIsPosting] = useState(false);
 
   useEffect(() => {
-    if (post.data) {
-      setDescription(post.data.description);
+    if (data) {
+      setDescription(data.description);
     }
-  }, [post.data]);
+  }, [data]);
 
   const {mutate: createPost} = useCreatePost();
   const {mutate: editPost} = useEditPost();
 
+  consoleLog(media, 'media');
+
   const onClose = () => {
     setDescription('');
-    dispatchPost({visible: false, media: [], data: undefined});
+    setVisible(false);
+    setData(null);
+    setMedia([]);
     setIsPosting(false);
   };
 
@@ -57,16 +59,16 @@ export default function () {
     setIsPosting(true);
 
     const files = await Promise.all(
-      post.media.map(async file => ({
+      media.map(async file => ({
         uri: await getImagePath(file),
         name: file.name,
       })),
     );
 
-    if (post.data) {
+    if (data) {
       editPost(
         {
-          postId: post.data.id,
+          postId: data.id,
           description,
           files: files,
         },
@@ -109,15 +111,15 @@ export default function () {
         type: [DocumentPicker.types.video, DocumentPicker.types.images],
       });
 
-      const media: MediaType[] = results.map(file => {
+      const _media: MediaType[] = results.map(file => {
         return {uri: file.uri, name: file.name || ''};
       });
 
-      media.map(async file => {
+      _media.map(async file => {
         return await uploadToCloudStorage(file);
       });
 
-      dispatchPost({media});
+      setMedia([...media, ..._media]);
     } catch (error) {
       if (DocumentPicker.isCancel(error)) {
       } else {
@@ -137,19 +139,19 @@ export default function () {
 
         await uploadToCloudStorage(newImage);
 
-        dispatchPost({media: [newImage]});
+        setMedia([...media, newImage]);
       }
     });
   };
 
-  const inputHeight = post.media.length > 0 ? 55 : '45%';
-  const disabled = !description && post.media.length === 0;
+  const inputHeight = media.length > 0 ? 55 : '45%';
+  const disabled = !description && media.length === 0;
 
   return (
     <Modal
       animationIn={'slideInUp'}
       animationOut={'slideOutDown'}
-      isVisible={post.visible}
+      isVisible={visible}
       statusBarTranslucent
       useNativeDriver
       hasBackdrop={false}
@@ -166,14 +168,14 @@ export default function () {
               color={color.primary}
             />
             <Text style={styles.textTitle}>
-              {post.data ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
+              {data ? 'Chỉnh sửa bài viết' : 'Tạo bài viết'}
             </Text>
 
             <AppProcessingButton
               width={80}
               height={40}
               backgroundColor={disabled ? light.light_gray : color.primary}
-              text={post.data ? 'Lưu' : 'Đăng'}
+              text={data ? 'Lưu' : 'Đăng'}
               onPress={handleCreatePost}
               disabled={disabled || isPosting}
               processing={isPosting}

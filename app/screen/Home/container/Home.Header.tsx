@@ -5,7 +5,7 @@ import LinearAvatar from 'app/components/LinearAvatar';
 import color from '@abong.code/theme/color';
 import IconAddImage from 'assets/icons/home/IconAddImage';
 import ModalCreatePost from 'app/components/modals/ModalCreatePost';
-import {MediaType, useHomeStore} from 'app/store/homeStore';
+import {MediaType} from 'app/store/homeStore';
 import DocumentPicker from 'react-native-document-picker';
 import useAuthStore from 'app/store/authStore';
 import {useNavigation} from '@react-navigation/native';
@@ -14,15 +14,17 @@ import {ParamsStack} from 'app/navigation/params';
 import {uploadToCloudStorage} from 'helper/uploadToCloudStorage';
 import {useDataStore} from 'app/store/dataStore';
 import {Resp_User} from 'app/api/auth.type';
+import {useHomeContext} from '../components/HomeContext';
 
 type Props = {};
 
 export default function HomeHeader(_props: Props) {
-  const dispatchPost = useHomeStore(s => s.dispatchPost);
+  const {setMedia, setVisible} = useHomeContext();
+
   const friendList = useDataStore(s => s.recentlyData.friendData);
   const user = useAuthStore(s => s.user);
   const showCreatePost = () => {
-    dispatchPost({visible: true});
+    setVisible(true);
   };
 
   const handleSelectFile = async () => {
@@ -30,15 +32,16 @@ export default function HomeHeader(_props: Props) {
       allowMultiSelection: true,
       type: [DocumentPicker.types.video, DocumentPicker.types.images],
     });
-    const media: MediaType[] = results.map(file => {
+    const _media: MediaType[] = results.map(file => {
       return {uri: file.uri, name: file.name || ''};
     });
 
-    media.map(async file => {
+    _media.map(async file => {
       return await uploadToCloudStorage(file);
     });
     if (results) {
-      dispatchPost({media, visible: true});
+      setMedia(_media);
+      setVisible(true);
     }
   };
 

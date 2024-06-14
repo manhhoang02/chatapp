@@ -8,7 +8,8 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {MediaItem} from '../CreatePostMediaField';
 import AppConstant from '@abong.code/config/AppConstant';
 import AppStyles from 'elements/AppStyles';
-import {MediaType, useHomeStore} from 'app/store/homeStore';
+import {MediaType} from 'app/store/homeStore';
+import {useHomeContext} from 'app/screen/Home/components/HomeContext';
 
 type Props = {
   isVisible: boolean;
@@ -18,7 +19,7 @@ type Props = {
 export default function ({isVisible, onClose, data}: Props) {
   const {top, bottom} = useSafeAreaInsets();
 
-  const media = useHomeStore(s => s.post.media);
+  const {media} = useHomeContext();
 
   return (
     <ReactNativeModal
@@ -34,7 +35,7 @@ export default function ({isVisible, onClose, data}: Props) {
           styles.container,
           {
             paddingBottom: bottom,
-            paddingTop: top,
+            paddingTop: top + 30,
           },
         ]}>
         <AppBlock mb={12} style={styles.header}>

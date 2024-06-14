@@ -8,6 +8,7 @@ import {KeyboardAwareFlatList} from 'react-native-keyboard-aware-scroll-view';
 import HomeHeader from './container/Home.Header';
 import {useDataStore} from 'app/store/dataStore';
 import {useRefresh} from 'app/hook/useRefresh';
+import {HomeProvider} from './components/HomeContext';
 
 export default function () {
   const data = useDataStore(s => s.recentlyData.postData);
@@ -24,18 +25,20 @@ export default function () {
   const {isRefreshing, onRefresh} = useRefresh(recentlyPostListener);
 
   return (
-    <AppContainer>
-      <KeyboardAwareFlatList
-        data={data}
-        refreshing={isRefreshing}
-        onRefresh={onRefresh}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponentStyle={styles.header}
-        ListHeaderComponent={<HomeHeader />}
-      />
-    </AppContainer>
+    <HomeProvider>
+      <AppContainer>
+        <KeyboardAwareFlatList
+          data={data}
+          refreshing={isRefreshing}
+          onRefresh={onRefresh}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponentStyle={styles.header}
+          ListHeaderComponent={<HomeHeader />}
+        />
+      </AppContainer>
+    </HomeProvider>
   );
 }
 const styles = StyleSheet.create({
