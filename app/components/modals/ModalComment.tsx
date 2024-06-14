@@ -36,6 +36,7 @@ import useAuthStore from 'app/store/authStore';
 import DocumentPicker from 'react-native-document-picker';
 import {useDataStore} from 'app/store/dataStore';
 import ReactNativeModal from 'react-native-modal';
+import {useGetUserById} from 'app/api/auth';
 
 type Props = {
   visible: boolean;
@@ -205,22 +206,15 @@ export default function ({postId, visible, onClose}: Props) {
   const FooterComponent = (
     <AppBlock>
       {isReplying.status && (
-        <AppBlock
-          padding={[12, 16]}
-          style={[AppStyles.rowCenterBetween, styles.borderTop]}>
-          <AppText>Trả lời: {isReplying.replyComment?.text}</AppText>
-
-          <Ionicons
-            name="close"
-            size={24}
-            onPress={() =>
-              setIsReplying({
-                status: false,
-                replyComment: undefined,
-              })
-            }
-          />
-        </AppBlock>
+        <ReplyField
+          author={isReplying.replyComment?.author || ''}
+          onClose={() =>
+            setIsReplying({
+              status: false,
+              replyComment: undefined,
+            })
+          }
+        />
       )}
 
       <AppBlock
@@ -301,6 +295,30 @@ export default function ({postId, visible, onClose}: Props) {
     </ReactNativeModal>
   );
 }
+
+const ReplyField = ({
+  author,
+  onClose,
+}: {
+  author: string;
+  onClose: () => void;
+}) => {
+  const {data} = useGetUserById(author);
+
+  const fullName = data?.firstName + ' ' + data?.lastName;
+  return (
+    <AppBlock
+      padding={[12, 16]}
+      style={[AppStyles.rowCenterBetween, styles.borderTop]}>
+      <AppText>
+        Trả lời: <AppText weight="700">{fullName}</AppText>
+      </AppText>
+
+      <Ionicons name="close" size={24} onPress={onClose} />
+    </AppBlock>
+  );
+};
+
 const styles = StyleSheet.create({
   modal: {margin: 0, flex: 1},
   borderTop: {

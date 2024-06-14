@@ -24,7 +24,6 @@ import {getImagePath, uploadToCloudStorage} from 'helper/uploadToCloudStorage';
 import {launchCamera} from 'helper/launchCamera';
 import AppProcessingButton from '@abong.code/elements/AppProcessingButton';
 import {useHomeContext} from 'app/screen/Home/components/HomeContext';
-import {consoleLog} from '@abong.code/helpers/logHelper';
 
 export default function () {
   const user = useAuthStore(s => s.user);
@@ -44,8 +43,6 @@ export default function () {
 
   const {mutate: createPost} = useCreatePost();
   const {mutate: editPost} = useEditPost();
-
-  consoleLog(media, 'media');
 
   const onClose = () => {
     setDescription('');

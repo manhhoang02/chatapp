@@ -58,30 +58,23 @@ export const createPost = async (
 
   const user = await getUserById(params.author);
 
-  return post_doc
-    .set({
-      ...params,
-      id: post_doc.id,
-      users_liked: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    })
-    .then(async () => {
-      await sendNotification({
-        title: 'Thông báo',
-        body: `${
-          user.firstName + ' ' + user.lastName
-        } đã đăng một bài viết mới`,
-        topics: [...user.friends],
-      });
+  await post_doc.set({
+    ...params,
+    id: post_doc.id,
+    users_liked: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
 
-      return {
-        message: 'Đã đăng bài viết mới',
-      };
-    })
-    .catch(error => {
-      throw new Error(error);
-    });
+  await sendNotification({
+    title: 'Thông báo',
+    body: `${user.firstName + ' ' + user.lastName} đã đăng một bài viết mới`,
+    topics: [...user.friends],
+  });
+
+  return {
+    message: 'Đã đăng bài viết mới',
+  };
 };
 
 export const useCreatePost = () =>
