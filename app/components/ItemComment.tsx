@@ -2,13 +2,20 @@ import color from '@abong.code/theme/color';
 import {AppBlock, AppText, AppTouchableOpacity} from '@starlingtech/element';
 import {Comment} from 'app/api/comment.type';
 import moment from 'moment';
-import React, {ReactNode, useState} from 'react';
+import React, {ReactNode, useEffect, useState} from 'react';
 import {Alert, Pressable, StyleSheet, Text} from 'react-native';
 import LinearAvatar from './LinearAvatar';
 import light from 'starling/theme/color/light';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useGetUserById} from 'app/api/auth';
-import {likeOrDislikeComment, useGetReplyComment} from 'app/api/comment';
+import {
+  deleteComment,
+  deleteReplyComment,
+  likeOrDislikeComment,
+} from 'app/api/comment';
+import {consoleLog} from '@abong.code/helpers/logHelper';
+import firestore from '@react-native-firebase/firestore';
+import {COLLECTION} from 'app/store/globalStore';
 
 const GRAY = '#66676c';
 const AVATAR_SIZE = 48;
@@ -20,38 +27,94 @@ export default function ({
   item: Comment;
   onReply: (item: Comment) => void;
 }) {
-  const {data: author} = useGetUserById(item.author);
-  const {data: replies} = useGetReplyComment(item.postId, item.id);
+  consoleLog(item, 'item');
+  const [replies, setReplies] = useState<Comment[]>([]);
 
-  const filter = replies
-    ? replies.filter(rep => rep.commentId === item.id)
-    : [];
+  const [more, setMore] = useState(false);
+
+  useEffect(() => {
+    function recentlyReplyListener(postId: string, commentId: string) {
+      return firestore()
+        .collection(
+          `${COLLECTION.POSTS}/${postId}/${COLLECTION.COMMENTS}/${commentId}/${COLLECTION.REPLIES}`,
+        )
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .onSnapshot(async snapshot => {
+          const _tempData = snapshot.docs.map(snap => {
+            return snap.data();
+          });
+
+          setReplies(_tempData as Comment[]);
+        });
+    }
+    const subscriber = recentlyReplyListener(item.postId, item.id);
+    return subscriber;
+  }, [item.id, item.postId]);
+
+  const displayedReplies = more ? replies : replies.slice(0, 2);
+
+  const onDeleteReplyComment = (replyId?: string) => {
+    Alert.alert('Xóa bình luận', 'Bạn có chắc chắn muốn xóa bình luận này?', [
+      {
+        text: 'Hủy',
+        style: 'cancel',
+      },
+      {
+        text: 'Xóa',
+        onPress: () => {
+          if (!replyId) {
+            deleteComment({postId: item.postId, commentId: item.id});
+          } else {
+            deleteReplyComment({
+              postId: item.postId,
+              commentId: item.id,
+              replyId,
+            });
+          }
+        },
+      },
+    ]);
+  };
+
   return (
-    <Item
-      item={item}
-      avatarUri={author?.avatar ?? ''}
-      avatarSize={AVATAR_SIZE}
-      onReply={onReply}
-      ListReply={filter.map((rep, index) => {
-        return (
-          <Item
-            key={index}
-            avatarSize={AVATAR_SIZE - 10}
-            item={rep}
-            avatarUri={''}
-          />
-        );
-      })}
-    />
+    <AppBlock>
+      <Item
+        item={item}
+        avatarSize={AVATAR_SIZE}
+        onReply={onReply}
+        onLongPress={() => onDeleteReplyComment()}
+        ListReply={displayedReplies.map((rep, index) => {
+          return (
+            <Item
+              key={index}
+              avatarSize={AVATAR_SIZE - 10}
+              item={rep}
+              onLongPress={() => onDeleteReplyComment(rep.id)}
+            />
+          );
+        })}
+      />
+      {replies.length > 2 && (
+        <AppTouchableOpacity
+          ml={AVATAR_SIZE + 8}
+          mb={8}
+          onPress={() => setMore(!more)}>
+          <AppText size={13} color={color.primary}>
+            {more ? 'Ẩn bớt' : 'Xem thêm'}
+          </AppText>
+        </AppTouchableOpacity>
+      )}
+    </AppBlock>
   );
 }
 
 interface ItemProps {
   avatarSize: number;
   item: Comment;
-  avatarUri: string;
   ListReply?: ReactNode;
   onReply?: (item: Comment) => void;
+  onLongPress?: () => void;
 }
 function Item(props: ItemProps) {
   const {avatarSize, item, ListReply, onReply} = props;
@@ -73,17 +136,13 @@ function Item(props: ItemProps) {
 
   // consoleLog(replies, 'replies');
 
-  const onLongPress = () => {
-    Alert.alert('ok');
-  };
-
   return (
     <AppBlock row>
       <LinearAvatar size={avatarSize} uri={author?.avatar} />
 
       <AppBlock flex>
         <AppBlock flex mb={10}>
-          <Pressable style={styles.bubble} onLongPress={onLongPress}>
+          <Pressable style={styles.bubble} onLongPress={props.onLongPress}>
             <Text style={styles.author}>
               {author?.firstName + ' ' + author?.lastName}
             </Text>

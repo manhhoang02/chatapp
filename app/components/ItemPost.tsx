@@ -44,7 +44,6 @@ export default function ({item}: Props) {
   const user = useAuthStore(s => s.user);
   const navigation = useNavigation<NativeStackNavigationProp<ParamsStack>>();
 
-  const commentSheetRef = useRef<BottomSheetModal>(null);
   const actionsSheetRef = useRef<BottomSheetModal>(null);
 
   const [isLiked, setIsLiked] = useState(
@@ -54,7 +53,9 @@ export default function ({item}: Props) {
     item.users_liked.length || 0,
   );
   const [showView, setShowView] = useState(false);
-  const [postId, setPostId] = useState('');
+  const [cmtVisible, setCmtVisible] = useState(false);
+
+  const toggleCmtVisible = () => setCmtVisible(!cmtVisible);
 
   const {data: author} = useGetUserById(item.author);
 
@@ -69,8 +70,7 @@ export default function ({item}: Props) {
   };
 
   const handleComment = () => {
-    commentSheetRef.current?.present();
-    setPostId(item.id);
+    toggleCmtVisible();
   };
 
   const handleOptions = () => {
@@ -161,7 +161,7 @@ export default function ({item}: Props) {
             <MediaItem
               file={{
                 uri: item.files[0].uri,
-                name: item.files[0].name || '',
+                name: item.files[0].name,
               }}
               style={styles.image}
               controls={false}
@@ -190,7 +190,11 @@ export default function ({item}: Props) {
         </AppBlock>
       </View>
 
-      <ModalComment bottomRef={commentSheetRef} postId={postId} />
+      <ModalComment
+        postId={item.id}
+        visible={cmtVisible}
+        onClose={toggleCmtVisible}
+      />
       <ModalPostActions bottomRef={actionsSheetRef} item={item} />
       <ModalViewMedia
         data={item.files}
